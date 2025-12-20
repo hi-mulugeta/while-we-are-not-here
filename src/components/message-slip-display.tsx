@@ -41,44 +41,42 @@ export function MessageSlipDisplay({ data, humanizedMessage, onApprove, isApprov
                 </header>
 
                 <section className="grid grid-cols-2 gap-x-6 gap-y-4 border-b border-gray-300 pb-4">
-                    <div className="flex items-center gap-2">
+                    <div className="grid grid-cols-[auto_1fr] items-center gap-2">
                         <p className="font-semibold uppercase text-sm">To:</p>
-                        <p className="text-base border-b border-dotted border-gray-500 flex-1">{data?.recipient}</p>
+                        <p className="text-base border-b border-dotted border-gray-500 w-full min-h-[1.5rem]">{data?.recipient}</p>
                     </div>
-                     <div className="flex items-center gap-2">
+                     <div className="grid grid-cols-[auto_1fr] items-center gap-2">
                         <p className="font-semibold uppercase text-sm">Date:</p>
-                        <p className="text-base border-b border-dotted border-gray-500 flex-1">
+                        <p className="text-base border-b border-dotted border-gray-500 w-full min-h-[1.5rem]">
                             {data?.date ? format(data.date, "MM/dd/yyyy") : ""}
                         </p>
                     </div>
-                    <div className="flex items-center gap-2 col-span-2">
+                    <div className="grid grid-cols-[auto_1fr] items-center gap-2 col-span-2">
                         <p className="font-semibold uppercase text-sm">From:</p>
-                        <p className="text-base border-b border-dotted border-gray-500 flex-1">{data?.senderName}</p>
+                        <p className="text-base border-b border-dotted border-gray-500 w-full min-h-[1.5rem]">{data?.senderName}</p>
                     </div>
-                     <div className="flex items-center gap-2">
+                     <div className="grid grid-cols-[auto_1fr] items-center gap-2">
                         <p className="font-semibold uppercase text-sm">Of:</p>
-                        <p className="text-base border-b border-dotted border-gray-500 flex-1">{data?.senderOrg || "N/A"}</p>
+                        <p className="text-base border-b border-dotted border-gray-500 w-full min-h-[1.5rem]">{data?.senderOrg || "N/A"}</p>
                     </div>
-                     <div className="flex items-center gap-2">
+                     <div className="grid grid-cols-[auto_1fr] items-center gap-2">
                         <p className="font-semibold uppercase text-sm">Time:</p>
-                        <p className="text-base border-b border-dotted border-gray-500 flex-1">
+                        <p className="text-base border-b border-dotted border-gray-500 w-full min-h-[1.5rem]">
                            {formattedTime}
                         </p>
                     </div>
-                     <div className="flex items-center gap-2 col-span-2">
+                     <div className="grid grid-cols-[auto_1fr] items-center gap-2 col-span-2">
                          <p className="font-semibold uppercase text-sm">Phone:</p>
-                         <p className="text-base border-b border-dotted border-gray-500 flex-1">{data?.phone || "N/A"}</p>
+                         <p className="text-base border-b border-dotted border-gray-500 w-full min-h-[1.5rem]">{data?.phone || "N/A"}</p>
                     </div>
                 </section>
                 
                 <section className="border-b border-gray-300 pb-4">
                     <p className="font-semibold uppercase text-sm mb-3 text-center">MESSAGE TYPE</p>
-                    <div className="grid grid-cols-2 gap-2 text-sm">
+                    <div className="grid grid-cols-2 gap-x-6 gap-y-2 text-sm">
                         {statusItems.map(item => (
                             <div key={item.label} className="flex items-center gap-2">
-                                <div className={cn(
-                                  "w-3 h-3 border border-gray-600 rounded-sm flex items-center justify-center",
-                                )}>
+                                <div className="w-3 h-3 border border-gray-600 rounded-sm flex items-center justify-center print:p-0">
                                   {item.checked && <div className="w-2 h-2 bg-gray-700 rounded-sm"></div>}
                                 </div>
                                 <span className="print:hidden">{item.label}</span>
