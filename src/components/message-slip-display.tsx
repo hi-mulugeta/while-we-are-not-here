@@ -29,7 +29,7 @@ export function MessageSlipDisplay({ data, humanizedMessage, onApprove, isApprov
   const formattedTime = time ? format(time, "hh:mm a") : "";
 
   const InfoRow = ({ label, value }: { label: string; value: string | undefined }) => (
-    <div className="contents">
+    <div className="grid grid-cols-1 md:grid-cols-[auto_1fr] md:gap-x-2">
       <p className="font-semibold uppercase text-sm mt-1">{label}:</p>
       <div className="border-b border-dotted border-gray-500 text-base min-h-[1.5rem]">
         {value}
@@ -49,7 +49,7 @@ export function MessageSlipDisplay({ data, humanizedMessage, onApprove, isApprov
                     </h1>
                 </header>
 
-                <section className="grid grid-cols-[auto_1fr_auto_1fr] gap-x-4 gap-y-2 border-b border-gray-300 pb-6">
+                <section className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2 border-b border-gray-300 pb-6">
                     <InfoRow label="To" value={data?.recipient} />
                     <InfoRow label="Date" value={data?.date ? format(data.date, "MM/dd/yyyy") : ""} />
                     <InfoRow label="From" value={data?.senderName} />
@@ -60,7 +60,7 @@ export function MessageSlipDisplay({ data, humanizedMessage, onApprove, isApprov
                 
                 <section className="border-b border-gray-300 pb-6">
                     <p className="font-semibold uppercase text-sm mb-4 text-center tracking-wider">Message Type</p>
-                    <div className="grid grid-cols-2 gap-x-12 gap-y-3 text-sm">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-12 gap-y-3 text-sm">
                         {statusItems.map(item => (
                             <div key={item.label} className="flex items-center gap-3">
                                 <div className="w-3.5 h-3.5 border border-gray-600 rounded-sm flex items-center justify-center p-0 flex-shrink-0">
@@ -73,8 +73,8 @@ export function MessageSlipDisplay({ data, humanizedMessage, onApprove, isApprov
                 </section>
                 
                 {humanizedMessage && (
-                  <section className="grid grid-cols-[auto_1fr] items-start gap-x-4 gap-y-2 border-b border-gray-300 pb-6">
-                      <div className="font-semibold uppercase text-sm flex items-center gap-2 tracking-wider col-span-2 justify-center mb-2">
+                  <section className="grid grid-cols-1 gap-y-2 border-b border-gray-300 pb-6">
+                      <div className="font-semibold uppercase text-sm flex items-center gap-2 tracking-wider justify-center mb-2">
                         <Bot size={16} /> {isApproved ? 'Message' : 'AI Summary'}
                         {!isApproved && onApprove && (
                           <button onClick={onApprove} className="no-print ml-auto p-1 text-xs bg-green-200 text-green-800 rounded-md hover:bg-green-300 flex items-center gap-1">

@@ -135,8 +135,8 @@ export default function MessageSlipForm() {
       const input: HumanizeMessageInput = { recipient, senderName, message, messageContext };
 
       try {
-        const { humanizedMessage } = await humanizeMessage(input);
-        setHumanizedMessage(humanizedMessage);
+        const { humanizedMessage: hMessage } = await humanizeMessage(input);
+        setHumanizedMessage(hMessage);
         setIsAiMessageApproved(false);
         toast({
           title: "Message Humanized!",
@@ -252,7 +252,7 @@ export default function MessageSlipForm() {
 
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+    <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
       <Card className="w-full no-print">
         <CardHeader>
           <CardTitle className="font-headline text-2xl tracking-wider">
@@ -384,7 +384,7 @@ export default function MessageSlipForm() {
 
               <div className="space-y-4">
                 <FormLabel>Message Type</FormLabel>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
                   {statusCheckboxes.map((item) => (
                     <FormField
                       key={item.id}
@@ -459,7 +459,7 @@ export default function MessageSlipForm() {
                 <Button type="button" variant="ghost" onClick={handleClearForm} className="w-full sm:w-auto">
                     <Trash2 className="mr-2 h-4 w-4" /> Clear
                 </Button>
-                <div className="flex w-full sm:w-auto sm:ml-auto gap-2">
+                <div className="flex w-full sm:w-auto sm:ml-auto gap-2 flex-wrap">
                     <Button
                         type="button"
                         variant="outline"
