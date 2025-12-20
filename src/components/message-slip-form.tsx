@@ -358,7 +358,7 @@ export default function MessageSlipForm() {
                     control={form.control}
                     name="time"
                     render={({ field }) => (
-                      <FormItem>
+                      <FormItem className="flex flex-col">
                         <FormLabel>Time</FormLabel>
                         <FormControl>
                           <Input type="time" {...field} />
