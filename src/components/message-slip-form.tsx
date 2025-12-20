@@ -75,6 +75,7 @@ const statusCheckboxes = [
 export default function MessageSlipForm() {
   const [submittedData, setSubmittedData] = useState<FormValues | null>(null);
   const [humanizedMessage, setHumanizedMessage] = useState<string | null>(null);
+  const [isAiMessageApproved, setIsAiMessageApproved] = useState(false);
   const [isPending, startTransition] = useTransition();
   const printRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
@@ -99,15 +100,20 @@ export default function MessageSlipForm() {
       statusRush: false,
     },
   });
+  
+  const watchedValues = form.watch();
 
   const onSubmit = (values: FormValues) => {
     setSubmittedData(values);
+    if (isAiMessageApproved && humanizedMessage) {
+       setSubmittedData(prev => prev ? {...prev, message: humanizedMessage} : { ...values, message: humanizedMessage });
+    }
   };
   
   const handleHumanizeMessage = () => {
     startTransition(async () => {
       const values = form.getValues();
-      const { recipient, senderName, message } = values;
+      const { recipient, senderName, message, ...statuses } = values;
 
       if (!recipient || !senderName || !message) {
         toast({
@@ -117,12 +123,21 @@ export default function MessageSlipForm() {
         });
         return;
       }
+
+      const messageContext = Object.entries(statuses)
+        .filter(([key, value]) => key.startsWith('status') && value)
+        .map(([key]) => {
+          const status = statusCheckboxes.find(s => s.id === key);
+          return status ? status.label : '';
+        })
+        .join(', ');
       
-      const input: HumanizeMessageInput = { recipient, senderName, message };
+      const input: HumanizeMessageInput = { recipient, senderName, message, messageContext };
 
       try {
         const { humanizedMessage } = await humanizeMessage(input);
         setHumanizedMessage(humanizedMessage);
+        setIsAiMessageApproved(false);
         toast({
           title: "Message Humanized!",
           description: "The AI summary has been added to the preview.",
@@ -136,6 +151,17 @@ export default function MessageSlipForm() {
         });
       }
     });
+  };
+
+  const handleApproveAiMessage = () => {
+    if (humanizedMessage) {
+      form.setValue("message", humanizedMessage);
+      setIsAiMessageApproved(true);
+      toast({
+        title: "AI Summary Approved",
+        description: "The original message has been updated.",
+      });
+    }
   };
 
 
@@ -159,44 +185,25 @@ export default function MessageSlipForm() {
     });
     setSubmittedData(null);
     setHumanizedMessage(null);
+    setIsAiMessageApproved(false);
   };
 
   const handlePrint = () => {
-    const printContent = printRef.current;
-    if (!printContent) return;
-
-    const printWindow = window.open('', '', 'height=800,width=800');
-    if (printWindow) {
-      printWindow.document.write('<html><head><title>Print Message</title>');
-      
-      const stylesheets = Array.from(document.styleSheets)
-        .map(sheet => {
-          try {
-            return Array.from(sheet.cssRules)
-              .map(rule => rule.cssText)
-              .join('');
-          } catch (e) {
-            console.warn('Could not read stylesheet', e);
-            return '';
-          }
-        })
-        .join('\n');
-
-      printWindow.document.write(`<style>${stylesheets}</style></head><body style="background-color: white !important;">`);
-      printWindow.document.write(printContent.innerHTML);
-      printWindow.document.write('</body></html>');
-      printWindow.document.close();
-      printWindow.focus();
-      printWindow.print();
-      printWindow.close();
-    }
+    window.print();
   };
 
   const handleExportPdf = () => {
-    const input = printRef.current;
+    const input = document.getElementById('pdf-content');
     if (!input) return;
 
+    // Temporarily remove no-print elements
+    const noPrintElements = input.querySelectorAll('.no-print');
+    noPrintElements.forEach(el => el.classList.add('hidden'));
+
     html2canvas(input, { scale: 2, backgroundColor: '#fefce8' }).then((canvas) => {
+      // Restore no-print elements
+      noPrintElements.forEach(el => el.classList.remove('hidden'));
+
       const imgData = canvas.toDataURL("image/png");
       const pdf = new jsPDF({
         orientation: "portrait",
@@ -228,12 +235,11 @@ export default function MessageSlipForm() {
   };
 
   const isFormSubmitted = submittedData !== null;
-  const watchedValues = form.watch();
 
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-      <Card className="w-full">
+      <Card className="w-full no-print">
         <CardHeader>
           <CardTitle className="font-headline text-2xl tracking-wider">
             Important Message
@@ -417,20 +423,25 @@ export default function MessageSlipForm() {
       </Card>
       <div className="flex flex-col gap-4">
           <Card className="w-full">
-            <CardHeader>
+            <CardHeader className="no-print">
                 <CardTitle>Preview & Actions</CardTitle>
                 <CardDescription>
                     This is a preview of your generated message slip.
                 </CardDescription>
             </CardHeader>
             <CardContent>
-                <div className="p-4 border rounded-lg bg-gray-50">
+                <div className="p-4 border rounded-lg bg-gray-50 print:border-none print:p-0 print:bg-transparent">
                     <div ref={printRef}>
-                      <MessageSlipDisplay data={isFormSubmitted ? submittedData : watchedValues} humanizedMessage={humanizedMessage} />
+                      <MessageSlipDisplay 
+                        data={isFormSubmitted ? submittedData : watchedValues} 
+                        humanizedMessage={humanizedMessage}
+                        onApprove={handleApproveAiMessage}
+                        isApproved={isAiMessageApproved}
+                      />
                     </div>
                 </div>
             </CardContent>
-            <CardFooter className="flex-col sm:flex-row gap-2">
+            <CardFooter className="flex-col sm:flex-row gap-2 no-print">
                 <Button type="button" variant="ghost" onClick={handleClearForm} className="w-full sm:w-auto">
                     <Trash2 className="mr-2 h-4 w-4" /> Clear
                 </Button>

@@ -3,18 +3,20 @@
 import { format } from "date-fns";
 import type { FormValues } from "./message-slip-form";
 import { cn } from "@/lib/utils";
-import { Bot } from "lucide-react";
+import { Bot, Check, ThumbsUp } from "lucide-react";
 
 interface MessageSlipDisplayProps {
   data: FormValues | null;
   humanizedMessage?: string | null;
+  onApprove?: () => void;
+  isApproved?: boolean;
 }
 
-export function MessageSlipDisplay({ data, humanizedMessage }: MessageSlipDisplayProps) {
+export function MessageSlipDisplay({ data, humanizedMessage, onApprove, isApproved }: MessageSlipDisplayProps) {
   const statusItems = [
     { label: "Telephoned", checked: data?.statusTelephoned },
     { label: "Came to see you", checked: data?.statusCameToSeeYou },
-    { label: "Wants to see you", checked: data?.statusWantsToSeeYou },
+    { label: "Wants to see you", checked:data?.statusWantsToSeeYou },
     { label: "Returned your call", checked: data?.statusReturnedCall },
     { label: "Please call", checked: data?.statusPleaseCall },
     { label: "Will call again", checked: data?.statusWillCallAgain },
@@ -27,7 +29,7 @@ export function MessageSlipDisplay({ data, humanizedMessage }: MessageSlipDispla
   const formattedTime = time ? format(time, "hh:mm a") : "";
 
   return (
-    <div className={cn("bg-yellow-50 text-gray-800 font-serif p-6 border-2 border-dashed border-gray-400 rounded-md", !hasData && "text-center flex items-center justify-center h-full")}>
+    <div id="pdf-content" className={cn("bg-yellow-50 text-gray-800 font-serif p-6 border-2 border-dashed border-gray-400 rounded-md", !hasData && "text-center flex items-center justify-center h-full")}>
         {!hasData ? (
             <p className="text-gray-500">Your message preview will appear here.</p>
         ) : (
@@ -75,10 +77,12 @@ export function MessageSlipDisplay({ data, humanizedMessage }: MessageSlipDispla
                         {statusItems.map(item => (
                             <div key={item.label} className="flex items-center gap-2">
                                 <div className={cn(
-                                  "w-3 h-3 border border-gray-600 rounded-sm",
-                                  item.checked && "bg-gray-700"
-                                )}></div>
-                                <span>{item.label}</span>
+                                  "w-3 h-3 border border-gray-600 rounded-sm flex items-center justify-center",
+                                )}>
+                                  {item.checked && <div className="w-2 h-2 bg-gray-700 rounded-sm"></div>}
+                                </div>
+                                <span className="print:hidden">{item.label}</span>
+                                <span className="hidden print:inline">{item.label}</span>
                             </div>
                         ))}
                     </div>
@@ -86,9 +90,19 @@ export function MessageSlipDisplay({ data, humanizedMessage }: MessageSlipDispla
                 
                 {humanizedMessage && (
                   <section className="border-b border-gray-300 pb-4">
-                      <p className="font-semibold uppercase text-sm mb-2 text-center flex items-center justify-center gap-2">
+                      <div className="font-semibold uppercase text-sm mb-2 text-center flex items-center justify-center gap-2">
                         <Bot size={16} /> AI Summary
-                      </p>
+                        {!isApproved && onApprove && (
+                          <button onClick={onApprove} className="no-print ml-auto p-1 text-xs bg-green-200 text-green-800 rounded-md hover:bg-green-300 flex items-center gap-1">
+                            <ThumbsUp size={12}/> Approve
+                          </button>
+                        )}
+                        {isApproved && (
+                           <div className="no-print ml-auto p-1 text-xs bg-blue-200 text-blue-800 rounded-md flex items-center gap-1">
+                            <Check size={12}/> Approved
+                          </div>
+                        )}
+                      </div>
                       <p className="text-sm italic text-gray-700 bg-yellow-100 p-2 rounded-md">
                           {humanizedMessage}
                       </p>

@@ -14,13 +14,14 @@ const HumanizeMessageInputSchema = z.object({
     senderName: z.string().describe("The name of the person who left the message."),
     recipient: z.string().describe("The name of the person the message is for."),
     message: z.string().describe("The raw message content."),
+    messageContext: z.string().describe("Additional context about the message, such as 'Urgent' or 'Telephoned'."),
 });
 export type HumanizeMessageInput = z.infer<typeof HumanizeMessageInputSchema>;
 
+export type HumanizeMessageOutput = z.infer<typeof HumanizeMessageOutputSchema>;
 const HumanizeMessageOutputSchema = z.object({
   humanizedMessage: z.string().describe("The rewritten, humanized version of the message."),
 });
-export type HumanizeMessageOutput = z.infer<typeof HumanizeMessageOutputSchema>;
 
 
 const humanizeMessageFlow = ai.defineFlow(
@@ -40,14 +41,18 @@ const humanizeMessageFlow = ai.defineFlow(
 
         Original Message:
         "{{{message}}}"
+        
+        Additional Context: {{{messageContext}}}
 
         Rewrite this message as a brief, friendly summary as if you were telling {{{recipient}}} about it in person.
+        Incorporate the additional context naturally into your summary. For example, if the context is "Urgent, Please call", make sure the summary reflects that.
         Start with a phrase like "Just a heads up..." or "Quick note...".
         Keep it concise and clear.
         Do not add any information that is not in the original message.
 
         Example:
-        Original: "Please call Mr. Smith at 555-1234 regarding the quarterly report. It is urgent."
+        Original: "Please call Mr. Smith at 555-1234 regarding the quarterly report."
+        Context: "Urgent, Please call"
         Summary: "Quick note - Mr. Smith called about the quarterly report. He said it's urgent and would like you to call him back at 555-1234."
         `,
     });
