@@ -252,7 +252,7 @@ export default function MessageSlipForm() {
 
 
   return (
-    <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
+    <div className="grid grid-cols-1 gap-8">
       <Card className="w-full no-print">
         <CardHeader>
           <CardTitle className="font-headline text-2xl tracking-wider">
