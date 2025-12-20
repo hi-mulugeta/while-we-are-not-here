@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useRef, useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -8,6 +8,7 @@ import { format } from "date-fns";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 
+import { humanizeMessage, type HumanizeMessageInput } from "@/ai/flows/humanize-message-flow";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import {
@@ -31,9 +32,10 @@ import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
-import { CalendarIcon, FileDown, Printer, Trash2 } from "lucide-react";
+import { Bot, CalendarIcon, FileDown, Loader2, Printer, Trash2 } from "lucide-react";
 import { Separator } from "./ui/separator";
 import { MessageSlipDisplay } from "./message-slip-display";
+import { useToast } from "@/hooks/use-toast";
 
 const formSchema = z.object({
   recipient: z.string().min(1, { message: "Recipient is required." }),
@@ -72,7 +74,10 @@ const statusCheckboxes = [
 
 export default function MessageSlipForm() {
   const [submittedData, setSubmittedData] = useState<FormValues | null>(null);
+  const [humanizedMessage, setHumanizedMessage] = useState<string | null>(null);
+  const [isPending, startTransition] = useTransition();
   const printRef = useRef<HTMLDivElement>(null);
+  const { toast } = useToast();
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -83,6 +88,7 @@ export default function MessageSlipForm() {
       senderOrg: "",
       phone: "",
       message: "",
+      date: new Date(),
       statusTelephoned: false,
       statusCameToSeeYou: false,
       statusWantsToSeeYou: false,
@@ -97,10 +103,62 @@ export default function MessageSlipForm() {
   const onSubmit = (values: FormValues) => {
     setSubmittedData(values);
   };
+  
+  const handleHumanizeMessage = () => {
+    startTransition(async () => {
+      const values = form.getValues();
+      const { recipient, senderName, message } = values;
+
+      if (!recipient || !senderName || !message) {
+        toast({
+          variant: "destructive",
+          title: "Missing Information",
+          description: "Please fill out the recipient, sender, and message fields before humanizing.",
+        });
+        return;
+      }
+      
+      const input: HumanizeMessageInput = { recipient, senderName, message };
+
+      try {
+        const { humanizedMessage } = await humanizeMessage(input);
+        setHumanizedMessage(humanizedMessage);
+        toast({
+          title: "Message Humanized!",
+          description: "The AI summary has been added to the preview.",
+        });
+      } catch (error) {
+        console.error("Failed to humanize message:", error);
+        toast({
+          variant: "destructive",
+          title: "AI Error",
+          description: "Could not generate the humanized message.",
+        });
+      }
+    });
+  };
+
 
   const handleClearForm = () => {
-    form.reset();
+    form.reset({
+      recipient: "",
+      time: "",
+      senderName: "",
+      senderOrg: "",
+      phone: "",
+      message: "",
+      date: new Date(),
+      statusTelephoned: false,
+      statusCameToSeeYou: false,
+      statusWantsToSeeYou: false,
+      statusReturnedCall: false,
+      statusUrgent: false,
+      statusPleaseCall: false,
+      statusWillCallAgain: false,
+      statusRush: false,
+    });
     setSubmittedData(null);
+    setHumanizedMessage(null);
   };
 
   const handlePrint = () => {
@@ -124,7 +182,7 @@ export default function MessageSlipForm() {
         })
         .join('\n');
 
-      printWindow.document.write(`<style>${stylesheets}</style></head><body>`);
+      printWindow.document.write(`<style>${stylesheets}</style></head><body style="background-color: white !important;">`);
       printWindow.document.write(printContent.innerHTML);
       printWindow.document.write('</body></html>');
       printWindow.document.close();
@@ -138,7 +196,7 @@ export default function MessageSlipForm() {
     const input = printRef.current;
     if (!input) return;
 
-    html2canvas(input, { scale: 2, backgroundColor: null }).then((canvas) => {
+    html2canvas(input, { scale: 2, backgroundColor: '#fefce8' }).then((canvas) => {
       const imgData = canvas.toDataURL("image/png");
       const pdf = new jsPDF({
         orientation: "portrait",
@@ -170,6 +228,8 @@ export default function MessageSlipForm() {
   };
 
   const isFormSubmitted = submittedData !== null;
+  const watchedValues = form.watch();
+
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -364,9 +424,9 @@ export default function MessageSlipForm() {
                 </CardDescription>
             </CardHeader>
             <CardContent>
-                <div className="p-4 border rounded-lg bg-white">
+                <div className="p-4 border rounded-lg bg-gray-50">
                     <div ref={printRef}>
-                      <MessageSlipDisplay data={submittedData || form.getValues()} />
+                      <MessageSlipDisplay data={isFormSubmitted ? submittedData : watchedValues} humanizedMessage={humanizedMessage} />
                     </div>
                 </div>
             </CardContent>
@@ -375,6 +435,16 @@ export default function MessageSlipForm() {
                     <Trash2 className="mr-2 h-4 w-4" /> Clear
                 </Button>
                 <div className="flex w-full sm:w-auto sm:ml-auto gap-2">
+                    <Button
+                        type="button"
+                        variant="outline"
+                        onClick={handleHumanizeMessage}
+                        disabled={isPending}
+                        className="flex-1"
+                    >
+                        {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Bot className="mr-2 h-4 w-4" />}
+                        Humanize
+                    </Button>
                     <Button type="button" variant="outline" onClick={handlePrint} disabled={!isFormSubmitted} className="flex-1">
                         <Printer className="mr-2 h-4 w-4" /> Print
                     </Button>
