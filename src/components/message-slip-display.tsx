@@ -29,9 +29,9 @@ export function MessageSlipDisplay({ data, humanizedMessage, onApprove, isApprov
   const formattedTime = time ? format(time, "hh:mm a") : "";
 
   const InfoRow = ({ label, value }: { label: string; value: string | undefined }) => (
-    <div className="flex items-end gap-2">
-      <p className="font-semibold uppercase text-sm w-16 flex-shrink-0">{label}:</p>
-      <div className="flex-grow border-b border-dotted border-gray-500 min-h-[1.5rem] text-base">
+    <div className="contents">
+      <p className="font-semibold uppercase text-sm mt-1">{label}:</p>
+      <div className="border-b border-dotted border-gray-500 text-base min-h-[1.5rem]">
         {value}
       </div>
     </div>
@@ -49,7 +49,7 @@ export function MessageSlipDisplay({ data, humanizedMessage, onApprove, isApprov
                     </h1>
                 </header>
 
-                <section className="grid grid-cols-2 gap-x-12 gap-y-4 border-b border-gray-300 pb-6">
+                <section className="grid grid-cols-[auto_1fr_auto_1fr] gap-x-4 gap-y-2 border-b border-gray-300 pb-6">
                     <InfoRow label="To" value={data?.recipient} />
                     <InfoRow label="Date" value={data?.date ? format(data.date, "MM/dd/yyyy") : ""} />
                     <InfoRow label="From" value={data?.senderName} />
@@ -73,9 +73,9 @@ export function MessageSlipDisplay({ data, humanizedMessage, onApprove, isApprov
                 </section>
                 
                 {humanizedMessage && (
-                  <section className="border-b border-gray-300 pb-6">
-                      <div className="font-semibold uppercase text-sm mb-3 text-center flex items-center justify-center gap-2 tracking-wider">
-                        <Bot size={16} /> AI Summary
+                  <section className="grid grid-cols-[auto_1fr] items-start gap-x-4 gap-y-2 border-b border-gray-300 pb-6">
+                      <div className="font-semibold uppercase text-sm flex items-center gap-2 tracking-wider col-span-2 justify-center mb-2">
+                        <Bot size={16} /> {isApproved ? 'Message' : 'AI Summary'}
                         {!isApproved && onApprove && (
                           <button onClick={onApprove} className="no-print ml-auto p-1 text-xs bg-green-200 text-green-800 rounded-md hover:bg-green-300 flex items-center gap-1">
                             <ThumbsUp size={12}/> Approve
@@ -87,18 +87,23 @@ export function MessageSlipDisplay({ data, humanizedMessage, onApprove, isApprov
                           </div>
                         )}
                       </div>
-                      <p className="text-sm italic text-gray-700 bg-yellow-100 p-3 rounded-md">
+                      <div className={cn(
+                        "col-span-2 text-sm text-gray-700 p-3 rounded-md",
+                        isApproved ? "bg-transparent italic" : "bg-yellow-100 italic"
+                      )}>
                           {humanizedMessage}
-                      </p>
+                      </div>
                   </section>
                 )}
 
-                <section>
-                    <p className="font-semibold uppercase text-sm mb-3 text-center tracking-wider">Message</p>
-                    <p className="text-sm leading-relaxed text-gray-800 whitespace-pre-wrap min-h-[60px] p-2 border-b border-dotted border-gray-500">
-                        {data?.message}
-                    </p>
-                </section>
+                {(!humanizedMessage || !isApproved) && (
+                  <section>
+                      <p className="font-semibold uppercase text-sm mb-3 text-center tracking-wider">Message</p>
+                      <p className="text-sm leading-relaxed text-gray-800 whitespace-pre-wrap min-h-[60px] p-2 border-b border-dotted border-gray-500">
+                          {data?.message}
+                      </p>
+                  </section>
+                )}
 
                 <footer className="mt-6 text-center">
                     <p className="text-xs text-gray-500">MessageSlip Auto-Generated Document</p>
