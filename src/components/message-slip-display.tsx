@@ -105,7 +105,7 @@ export function MessageSlipDisplay({ data, humanizedMessage, onApprove, isApprov
                 )}
 
                 <footer className="mt-6 text-center">
-                    <p className="text-xs text-gray-500">MessageSlip Auto-Generated Document</p>
+                    <p className="text-xs text-gray-500">MessageSlip | I Approve this Message</p>
                 </footer>
             </div>
         )}
