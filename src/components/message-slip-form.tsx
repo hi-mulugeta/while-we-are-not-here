@@ -32,7 +32,7 @@ import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
-import { Bot, CalendarIcon, FileDown, Loader2, Printer, Trash2 } from "lucide-react";
+import { Bot, CalendarIcon, Camera, FileDown, Loader2, Printer, Trash2 } from "lucide-react";
 import { Separator } from "./ui/separator";
 import { MessageSlipDisplay } from "./message-slip-display";
 import { useToast } from "@/hooks/use-toast";
@@ -231,6 +231,26 @@ export default function MessageSlipForm() {
 
       pdf.addImage(imgData, "PNG", x, y, finalWidth, finalHeight);
       pdf.save("message-slip.pdf");
+    });
+  };
+
+  const handleExportPng = () => {
+    const input = document.getElementById('pdf-content');
+    if (!input) return;
+
+    // Temporarily remove no-print elements
+    const noPrintElements = input.querySelectorAll('.no-print');
+    noPrintElements.forEach(el => el.classList.add('hidden'));
+
+    html2canvas(input, { scale: 3, backgroundColor: '#fefce8' }).then((canvas) => {
+      // Restore no-print elements
+      noPrintElements.forEach(el => el.classList.remove('hidden'));
+
+      const imgData = canvas.toDataURL("image/png");
+      const link = document.createElement('a');
+      link.download = 'message-slip.png';
+      link.href = imgData;
+      link.click();
     });
   };
 
@@ -458,6 +478,9 @@ export default function MessageSlipForm() {
                     </Button>
                     <Button type="button" variant="outline" onClick={handlePrint} disabled={!isFormSubmitted} className="flex-1">
                         <Printer className="mr-2 h-4 w-4" /> Print
+                    </Button>
+                    <Button type="button" onClick={handleExportPng} disabled={!isFormSubmitted} className="flex-1">
+                        <Camera className="mr-2 h-4 w-4" /> Export PNG
                     </Button>
                     <Button type="button" onClick={handleExportPdf} disabled={!isFormSubmitted} className="flex-1">
                         <FileDown className="mr-2 h-4 w-4" /> Export PDF
