@@ -28,55 +28,42 @@ export function MessageSlipDisplay({ data, humanizedMessage, onApprove, isApprov
   const time = data?.time ? new Date(`1970-01-01T${data.time}`) : null;
   const formattedTime = time ? format(time, "hh:mm a") : "";
 
+  const InfoRow = ({ label, value }: { label: string; value: string | undefined }) => (
+    <div className="flex items-end gap-2">
+      <p className="font-semibold uppercase text-sm w-16 flex-shrink-0">{label}:</p>
+      <div className="flex-grow border-b border-dotted border-gray-500 min-h-[1.5rem] text-base">
+        {value}
+      </div>
+    </div>
+  );
+  
   return (
-    <div id="pdf-content" className={cn("bg-yellow-50 text-gray-800 font-serif p-6 border-2 border-dashed border-gray-400 rounded-md", !hasData && "text-center flex items-center justify-center h-full")}>
+    <div id="pdf-content" className={cn("bg-yellow-50 text-gray-800 font-serif p-8 border-2 border-dashed border-gray-400 rounded-md", !hasData && "text-center flex items-center justify-center h-full")}>
         {!hasData ? (
             <p className="text-gray-500">Your message preview will appear here.</p>
         ) : (
-            <div className="space-y-4">
-                <header className="text-center border-b-2 border-gray-400 pb-2">
-                    <h1 className="text-2xl font-bold text-gray-900 uppercase">
+            <div className="space-y-6">
+                <header className="text-center border-b-2 border-gray-400 pb-2 mb-6">
+                    <h1 className="text-2xl font-bold text-gray-900 uppercase tracking-widest">
                         While You Were Out
                     </h1>
                 </header>
 
-                <section className="grid grid-cols-2 gap-x-6 gap-y-4 border-b border-gray-300 pb-4">
-                    <div className="flex items-end gap-2">
-                        <p className="font-semibold uppercase text-sm flex-shrink-0">To:</p>
-                        <p className="text-base border-b border-dotted border-gray-500 w-full min-h-[1.5rem]">{data?.recipient}</p>
-                    </div>
-                     <div className="flex items-end gap-2">
-                        <p className="font-semibold uppercase text-sm flex-shrink-0">Date:</p>
-                        <p className="text-base border-b border-dotted border-gray-500 w-full min-h-[1.5rem]">
-                            {data?.date ? format(data.date, "MM/dd/yyyy") : ""}
-                        </p>
-                    </div>
-                    <div className="flex items-end gap-2 col-span-2">
-                        <p className="font-semibold uppercase text-sm flex-shrink-0">From:</p>
-                        <p className="text-base border-b border-dotted border-gray-500 w-full min-h-[1.5rem]">{data?.senderName}</p>
-                    </div>
-                     <div className="flex items-end gap-2">
-                        <p className="font-semibold uppercase text-sm flex-shrink-0">Of:</p>
-                        <p className="text-base border-b border-dotted border-gray-500 w-full min-h-[1.5rem]">{data?.senderOrg || "N/A"}</p>
-                    </div>
-                     <div className="flex items-end gap-2">
-                        <p className="font-semibold uppercase text-sm flex-shrink-0">Time:</p>
-                        <p className="text-base border-b border-dotted border-gray-500 w-full min-h-[1.5rem]">
-                           {formattedTime}
-                        </p>
-                    </div>
-                     <div className="flex items-end gap-2 col-span-2">
-                         <p className="font-semibold uppercase text-sm flex-shrink-0">Phone:</p>
-                         <p className="text-base border-b border-dotted border-gray-500 w-full min-h-[1.5rem]">{data?.phone || "N/A"}</p>
-                    </div>
+                <section className="grid grid-cols-2 gap-x-12 gap-y-4 border-b border-gray-300 pb-6">
+                    <InfoRow label="To" value={data?.recipient} />
+                    <InfoRow label="Date" value={data?.date ? format(data.date, "MM/dd/yyyy") : ""} />
+                    <InfoRow label="From" value={data?.senderName} />
+                    <InfoRow label="Time" value={formattedTime} />
+                    <InfoRow label="Of" value={data?.senderOrg || "N/A"} />
+                    <InfoRow label="Phone" value={data?.phone || "N/A"} />
                 </section>
                 
-                <section className="border-b border-gray-300 pb-4">
-                    <p className="font-semibold uppercase text-sm mb-3 text-center">MESSAGE TYPE</p>
-                    <div className="grid grid-cols-2 gap-x-6 gap-y-2 text-sm">
+                <section className="border-b border-gray-300 pb-6">
+                    <p className="font-semibold uppercase text-sm mb-4 text-center tracking-wider">MESSAGE TYPE</p>
+                    <div className="grid grid-cols-2 gap-x-12 gap-y-3 text-sm">
                         {statusItems.map(item => (
-                            <div key={item.label} className="flex items-center gap-2">
-                                <div className="w-3 h-3 border border-gray-600 rounded-sm flex items-center justify-center p-0">
+                            <div key={item.label} className="flex items-center gap-3">
+                                <div className="w-3.5 h-3.5 border border-gray-600 rounded-sm flex items-center justify-center p-0 flex-shrink-0">
                                   {item.checked && <div className="w-full h-full bg-gray-700 scale-90"></div>}
                                 </div>
                                 <span>{item.label}</span>
@@ -86,8 +73,8 @@ export function MessageSlipDisplay({ data, humanizedMessage, onApprove, isApprov
                 </section>
                 
                 {humanizedMessage && (
-                  <section className="border-b border-gray-300 pb-4">
-                      <div className="font-semibold uppercase text-sm mb-2 text-center flex items-center justify-center gap-2">
+                  <section className="border-b border-gray-300 pb-6">
+                      <div className="font-semibold uppercase text-sm mb-3 text-center flex items-center justify-center gap-2 tracking-wider">
                         <Bot size={16} /> AI Summary
                         {!isApproved && onApprove && (
                           <button onClick={onApprove} className="no-print ml-auto p-1 text-xs bg-green-200 text-green-800 rounded-md hover:bg-green-300 flex items-center gap-1">
@@ -100,20 +87,20 @@ export function MessageSlipDisplay({ data, humanizedMessage, onApprove, isApprov
                           </div>
                         )}
                       </div>
-                      <p className="text-sm italic text-gray-700 bg-yellow-100 p-2 rounded-md">
+                      <p className="text-sm italic text-gray-700 bg-yellow-100 p-3 rounded-md">
                           {humanizedMessage}
                       </p>
                   </section>
                 )}
 
                 <section>
-                    <p className="font-semibold uppercase text-sm mb-2 text-center">Message</p>
+                    <p className="font-semibold uppercase text-sm mb-3 text-center tracking-wider">Message</p>
                     <p className="text-sm leading-relaxed text-gray-800 whitespace-pre-wrap min-h-[60px] p-2 border-b border-dotted border-gray-500">
                         {data?.message}
                     </p>
                 </section>
 
-                <footer className="mt-4 text-center">
+                <footer className="mt-6 text-center">
                     <p className="text-xs text-gray-500">MessageSlip Auto-Generated Document</p>
                 </footer>
             </div>
