@@ -9,6 +9,7 @@ import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 
 import { humanizeMessage, type HumanizeMessageInput } from "@/ai/flows/humanize-message-flow";
+import { analyzeMessage, type AnalyzeMessageInput, type AnalyzeMessageOutput } from "@/ai/flows/analyze-message-flow";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import {
@@ -32,10 +33,13 @@ import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
-import { Bot, CalendarIcon, Camera, FileDown, Loader2, Printer, Trash2 } from "lucide-react";
+import { Bot, BrainCircuit, CalendarIcon, Camera, FileDown, Lightbulb, Loader2, Printer, Trash2 } from "lucide-react";
 import { Separator } from "./ui/separator";
 import { MessageSlipDisplay } from "./message-slip-display";
 import { useToast } from "@/hooks/use-toast";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "./ui/dialog";
+import { Badge } from "./ui/badge";
+import { Progress } from "./ui/progress";
 
 const formSchema = z.object({
   recipient: z.string().min(1, { message: "Recipient is required." }),
@@ -76,7 +80,11 @@ export default function MessageSlipForm() {
   const [submittedData, setSubmittedData] = useState<FormValues | null>(null);
   const [humanizedMessage, setHumanizedMessage] = useState<string | null>(null);
   const [isAiMessageApproved, setIsAiMessageApproved] = useState(false);
-  const [isPending, startTransition] = useTransition();
+  const [analysisResult, setAnalysisResult] = useState<AnalyzeMessageOutput | null>(null);
+  const [isAnalysisDialogOpen, setIsAnalysisDialogOpen] = useState(false);
+
+  const [isHumanizePending, startHumanizeTransition] = useTransition();
+  const [isAnalyzePending, startAnalyzeTransition] = useTransition();
   const printRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
@@ -111,7 +119,7 @@ export default function MessageSlipForm() {
   };
   
   const handleHumanizeMessage = () => {
-    startTransition(async () => {
+    startHumanizeTransition(async () => {
       const values = form.getValues();
       const { recipient, senderName, message, ...statuses } = values;
 
@@ -153,6 +161,33 @@ export default function MessageSlipForm() {
     });
   };
 
+  const handleAnalyzeMessage = () => {
+    startAnalyzeTransition(async () => {
+      const message = form.getValues("message");
+      if (!message) {
+        toast({
+          variant: "destructive",
+          title: "Missing Message",
+          description: "Please enter a message to analyze.",
+        });
+        return;
+      }
+
+      try {
+        const result = await analyzeMessage({ message });
+        setAnalysisResult(result);
+        setIsAnalysisDialogOpen(true);
+      } catch (error) {
+        console.error("Failed to analyze message:", error);
+        toast({
+          variant: "destructive",
+          title: "AI Error",
+          description: "Could not analyze the message.",
+        });
+      }
+    });
+  };
+
   const handleApproveAiMessage = () => {
     if (humanizedMessage) {
       form.setValue("message", humanizedMessage);
@@ -186,6 +221,7 @@ export default function MessageSlipForm() {
     setSubmittedData(null);
     setHumanizedMessage(null);
     setIsAiMessageApproved(false);
+    setAnalysisResult(null);
   };
 
   const handlePrint = () => {
@@ -252,14 +288,14 @@ export default function MessageSlipForm() {
 
 
   return (
-    <div className="grid grid-cols-1 gap-8">
+    <div className="grid grid-cols-1 gap-8 lg:grid-cols-1">
       <Card className="w-full no-print">
         <CardHeader>
           <CardTitle className="font-headline text-2xl tracking-wider">
             Important Message
           </CardTitle>
           <CardDescription>
-            Fill out the form to create a new message slip.
+            Fill out the form to create a new message slip. Use the AI tools to improve your message.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -384,7 +420,7 @@ export default function MessageSlipForm() {
 
               <div className="space-y-4">
                 <FormLabel>Message Type</FormLabel>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
                   {statusCheckboxes.map((item) => (
                     <FormField
                       key={item.id}
@@ -438,7 +474,7 @@ export default function MessageSlipForm() {
       <div className="flex flex-col gap-4">
           <Card className="w-full">
             <CardHeader className="no-print">
-                <CardTitle>Preview & Actions</CardTitle>
+                <CardTitle>Preview &amp; Actions</CardTitle>
                 <CardDescription>
                     This is a preview of your generated message slip.
                 </CardDescription>
@@ -459,15 +495,25 @@ export default function MessageSlipForm() {
                 <Button type="button" variant="ghost" onClick={handleClearForm} className="w-full sm:w-auto">
                     <Trash2 className="mr-2 h-4 w-4" /> Clear
                 </Button>
-                <div className="flex w-full sm:w-auto sm:ml-auto gap-2 flex-wrap">
+                <div className="flex w-full sm:w-auto sm:ml-auto gap-2 flex-wrap justify-center">
+                    <Button
+                        type="button"
+                        variant="outline"
+                        onClick={handleAnalyzeMessage}
+                        disabled={isAnalyzePending}
+                        className="flex-1"
+                    >
+                        {isAnalyzePending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <BrainCircuit className="mr-2 h-4 w-4" />}
+                        Analyze
+                    </Button>
                     <Button
                         type="button"
                         variant="outline"
                         onClick={handleHumanizeMessage}
-                        disabled={isPending}
+                        disabled={isHumanizePending}
                         className="flex-1"
                     >
-                        {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Bot className="mr-2 h-4 w-4" />}
+                        {isHumanizePending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Bot className="mr-2 h-4 w-4" />}
                         Humanize
                     </Button>
                     <Button type="button" variant="outline" onClick={handlePrint} disabled={!isFormSubmitted} className="flex-1">
@@ -483,6 +529,46 @@ export default function MessageSlipForm() {
             </CardFooter>
           </Card>
       </div>
+
+      <Dialog open={isAnalysisDialogOpen} onOpenChange={setIsAnalysisDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <BrainCircuit className="h-6 w-6" />
+              Message Analysis
+            </DialogTitle>
+            <DialogDescription>
+              Here's the AI's feedback on your message.
+            </DialogDescription>
+          </DialogHeader>
+          {analysisResult && (
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <h3 className="text-sm font-semibold uppercase text-muted-foreground">Tone</h3>
+                <Badge variant="secondary" className="text-base">{analysisResult.tone}</Badge>
+              </div>
+              <div className="space-y-2">
+                <h3 className="text-sm font-semibold uppercase text-muted-foreground">Clarity Score</h3>
+                <div className="flex items-center gap-2">
+                   <Progress value={analysisResult.clarityScore * 10} className="w-full h-3" />
+                   <span className="font-bold text-lg">{analysisResult.clarityScore}/10</span>
+                </div>
+              </div>
+              <div className="space-y-2">
+                <h3 className="text-sm font-semibold uppercase text-muted-foreground">Suggestions</h3>
+                <ul className="space-y-2 list-none">
+                  {analysisResult.suggestions.map((suggestion, index) => (
+                    <li key={index} className="flex items-start gap-3 text-sm">
+                      <Lightbulb className="h-4 w-4 mt-0.5 flex-shrink-0 text-yellow-500" />
+                      <span>{suggestion}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
