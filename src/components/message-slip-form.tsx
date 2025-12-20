@@ -196,14 +196,12 @@ export default function MessageSlipForm() {
     const input = document.getElementById('pdf-content');
     if (!input) return;
 
-    // Temporarily remove no-print elements
-    const noPrintElements = input.querySelectorAll('.no-print');
-    noPrintElements.forEach(el => el.classList.add('hidden'));
-
-    html2canvas(input, { scale: 2, backgroundColor: '#fefce8' }).then((canvas) => {
-      // Restore no-print elements
-      noPrintElements.forEach(el => el.classList.remove('hidden'));
-
+    html2canvas(input, {
+      scale: 2,
+      useCORS: true,
+      allowTaint: true,
+      logging: false,
+    }).then((canvas) => {
       const imgData = canvas.toDataURL("image/png");
       const pdf = new jsPDF({
         orientation: "portrait",
@@ -216,12 +214,10 @@ export default function MessageSlipForm() {
       const canvasAspectRatio = canvas.width / canvas.height;
       
       let finalWidth, finalHeight;
-      // Fit to width
       finalWidth = pdfWidth - 40; // with margin
       finalHeight = finalWidth / canvasAspectRatio;
 
       if (finalHeight > pdfHeight - 40) {
-        // Fit to height if it overflows
         finalHeight = pdfHeight - 40;
         finalWidth = finalHeight * canvasAspectRatio;
       }
@@ -238,14 +234,12 @@ export default function MessageSlipForm() {
     const input = document.getElementById('pdf-content');
     if (!input) return;
 
-    // Temporarily remove no-print elements
-    const noPrintElements = input.querySelectorAll('.no-print');
-    noPrintElements.forEach(el => el.classList.add('hidden'));
-
-    html2canvas(input, { scale: 3, backgroundColor: '#fefce8' }).then((canvas) => {
-      // Restore no-print elements
-      noPrintElements.forEach(el => el.classList.remove('hidden'));
-
+    html2canvas(input, {
+      scale: 3,
+      useCORS: true,
+      allowTaint: true,
+      logging: false,
+    }).then((canvas) => {
       const imgData = canvas.toDataURL("image/png");
       const link = document.createElement('a');
       link.download = 'message-slip.png';

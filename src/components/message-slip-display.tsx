@@ -59,14 +59,14 @@ export function MessageSlipDisplay({ data, humanizedMessage, onApprove, isApprov
                 </section>
                 
                 <section className="border-b border-gray-300 pb-6">
-                    <p className="font-semibold uppercase text-sm mb-4 text-center tracking-wider">MESSAGE TYPE</p>
+                    <p className="font-semibold uppercase text-sm mb-4 text-center tracking-wider">Message Type</p>
                     <div className="grid grid-cols-2 gap-x-12 gap-y-3 text-sm">
                         {statusItems.map(item => (
                             <div key={item.label} className="flex items-center gap-3">
                                 <div className="w-3.5 h-3.5 border border-gray-600 rounded-sm flex items-center justify-center p-0 flex-shrink-0">
                                   {item.checked && <div className="w-full h-full bg-gray-700 scale-90"></div>}
                                 </div>
-                                <span>{item.label}</span>
+                                <span>{item.label.toUpperCase()}</span>
                             </div>
                         ))}
                     </div>
