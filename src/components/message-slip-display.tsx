@@ -88,8 +88,7 @@ export function MessageSlipDisplay({ data, humanizedMessage, onApprove, isApprov
                         )}
                       </div>
                       <div className={cn(
-                        "col-span-2 text-sm text-gray-700 p-3 rounded-md",
-                        isApproved ? "bg-transparent italic" : "bg-yellow-100 italic"
+                        "col-span-2 text-sm text-gray-700 p-3 rounded-md bg-yellow-100 italic"
                       )}>
                           {humanizedMessage}
                       </div>
