@@ -16,7 +16,7 @@ export function MessageSlipDisplay({ data, humanizedMessage, onApprove, isApprov
   const statusItems = [
     { label: "Telephoned", checked: data?.statusTelephoned },
     { label: "Came to see you", checked: data?.statusCameToSeeYou },
-    { label: "Wants to see you", checked:data?.statusWantsToSeeYou },
+    { label: "Wants to see you", checked: data?.statusWantsToSeeYou },
     { label: "Returned your call", checked: data?.statusReturnedCall },
     { label: "Please call", checked: data?.statusPleaseCall },
     { label: "Will call again", checked: data?.statusWillCallAgain },
@@ -41,32 +41,32 @@ export function MessageSlipDisplay({ data, humanizedMessage, onApprove, isApprov
                 </header>
 
                 <section className="grid grid-cols-2 gap-x-6 gap-y-4 border-b border-gray-300 pb-4">
-                    <div className="grid grid-cols-[auto_1fr] items-center gap-2">
-                        <p className="font-semibold uppercase text-sm">To:</p>
+                    <div className="flex items-end gap-2">
+                        <p className="font-semibold uppercase text-sm flex-shrink-0">To:</p>
                         <p className="text-base border-b border-dotted border-gray-500 w-full min-h-[1.5rem]">{data?.recipient}</p>
                     </div>
-                     <div className="grid grid-cols-[auto_1fr] items-center gap-2">
-                        <p className="font-semibold uppercase text-sm">Date:</p>
+                     <div className="flex items-end gap-2">
+                        <p className="font-semibold uppercase text-sm flex-shrink-0">Date:</p>
                         <p className="text-base border-b border-dotted border-gray-500 w-full min-h-[1.5rem]">
                             {data?.date ? format(data.date, "MM/dd/yyyy") : ""}
                         </p>
                     </div>
-                    <div className="grid grid-cols-[auto_1fr] items-center gap-2 col-span-2">
-                        <p className="font-semibold uppercase text-sm">From:</p>
+                    <div className="flex items-end gap-2 col-span-2">
+                        <p className="font-semibold uppercase text-sm flex-shrink-0">From:</p>
                         <p className="text-base border-b border-dotted border-gray-500 w-full min-h-[1.5rem]">{data?.senderName}</p>
                     </div>
-                     <div className="grid grid-cols-[auto_1fr] items-center gap-2">
-                        <p className="font-semibold uppercase text-sm">Of:</p>
+                     <div className="flex items-end gap-2">
+                        <p className="font-semibold uppercase text-sm flex-shrink-0">Of:</p>
                         <p className="text-base border-b border-dotted border-gray-500 w-full min-h-[1.5rem]">{data?.senderOrg || "N/A"}</p>
                     </div>
-                     <div className="grid grid-cols-[auto_1fr] items-center gap-2">
-                        <p className="font-semibold uppercase text-sm">Time:</p>
+                     <div className="flex items-end gap-2">
+                        <p className="font-semibold uppercase text-sm flex-shrink-0">Time:</p>
                         <p className="text-base border-b border-dotted border-gray-500 w-full min-h-[1.5rem]">
                            {formattedTime}
                         </p>
                     </div>
-                     <div className="grid grid-cols-[auto_1fr] items-center gap-2 col-span-2">
-                         <p className="font-semibold uppercase text-sm">Phone:</p>
+                     <div className="flex items-end gap-2 col-span-2">
+                         <p className="font-semibold uppercase text-sm flex-shrink-0">Phone:</p>
                          <p className="text-base border-b border-dotted border-gray-500 w-full min-h-[1.5rem]">{data?.phone || "N/A"}</p>
                     </div>
                 </section>
@@ -76,11 +76,10 @@ export function MessageSlipDisplay({ data, humanizedMessage, onApprove, isApprov
                     <div className="grid grid-cols-2 gap-x-6 gap-y-2 text-sm">
                         {statusItems.map(item => (
                             <div key={item.label} className="flex items-center gap-2">
-                                <div className="w-3 h-3 border border-gray-600 rounded-sm flex items-center justify-center print:p-0">
-                                  {item.checked && <div className="w-2 h-2 bg-gray-700 rounded-sm"></div>}
+                                <div className="w-3 h-3 border border-gray-600 rounded-sm flex items-center justify-center p-0">
+                                  {item.checked && <div className="w-full h-full bg-gray-700 scale-90"></div>}
                                 </div>
-                                <span className="print:hidden">{item.label}</span>
-                                <span className="hidden print:inline">{item.label}</span>
+                                <span>{item.label}</span>
                             </div>
                         ))}
                     </div>
