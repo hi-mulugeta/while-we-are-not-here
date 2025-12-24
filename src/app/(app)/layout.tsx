@@ -34,7 +34,7 @@ export default function AppLayout({
     }
   };
 
-  if (isUserLoading || isProfileLoading) {
+  if (isUserLoading) {
     return <div className="flex h-screen items-center justify-center">Loading...</div>;
   }
   
@@ -62,16 +62,20 @@ export default function AppLayout({
                 <SidebarMenuItem>
                     <Link href="/app" passHref>
                         <SidebarMenuButton asChild isActive={pathname === '/app'}>
-                            <Home />
-                            <span>Home</span>
+                            <span>
+                                <Home />
+                                <span>Home</span>
+                            </span>
                         </SidebarMenuButton>
                     </Link>
                 </SidebarMenuItem>
                 <SidebarMenuItem>
                     <Link href="/app/archive" passHref>
                         <SidebarMenuButton asChild isActive={pathname === '/app/archive'}>
-                            <Archive />
-                            <span>Archive</span>
+                            <span>
+                                <Archive />
+                                <span>Archive</span>
+                            </span>
                         </SidebarMenuButton>
                     </Link>
                 </SidebarMenuItem>
@@ -79,8 +83,10 @@ export default function AppLayout({
                     <SidebarMenuItem>
                          <Link href="/app/admin" passHref>
                             <SidebarMenuButton asChild isActive={pathname === '/app/admin'}>
-                                <UserCog />
-                                <span>Admin</span>
+                               <span>
+                                 <UserCog />
+                                 <span>Admin</span>
+                               </span>
                             </SidebarMenuButton>
                         </Link>
                     </SidebarMenuItem>
@@ -98,11 +104,17 @@ export default function AppLayout({
         <header className="flex h-14 items-center justify-between border-b bg-background px-4">
             <SidebarTrigger />
             <div className='flex items-center gap-2'>
-                <Shield size={16} className='text-muted-foreground' />
-                <span className='text-sm text-muted-foreground font-medium'>{profile?.role}</span>
+                {isProfileLoading ? (
+                    <span className='text-sm text-muted-foreground font-medium'>...</span>
+                ) : (
+                    <>
+                        <Shield size={16} className='text-muted-foreground' />
+                        <span className='text-sm text-muted-foreground font-medium'>{profile?.role}</span>
+                    </>
+                )}
             </div>
         </header>
-        {children}
+        {isProfileLoading ? <div className="p-8">Loading profile...</div> : children}
       </main>
     </SidebarProvider>
   );
