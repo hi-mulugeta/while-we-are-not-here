@@ -33,7 +33,7 @@ service cloud.firestore {
       allow delete: if false;
     }
 
-    // Security Rules for Message Slips
+    // Security Rules for individual Message Slip documents
     match /messageSlips/{messageSlipId} {
       // ANY authenticated user can create a message slip, as long as they are the creator
       allow create: if isSignedIn() && request.resource.data.creatorId == request.auth.uid;
@@ -45,11 +45,11 @@ service cloud.firestore {
       allow update, delete: if isSignedIn() && resource.data.creatorId == request.auth.uid;
     }
     
-    // Rules for queries on the messageSlips collection
+    // Security Rules for queries on the messageSlips collection
     match /messageSlips/{document=**} {
         // Admins can list all slips.
         // Users can only list slips they created.
-        allow list: if isAdmin() || (isSignedIn() && request.query.where['creatorId'] == request.auth.uid);
+        allow list: if isAdmin() || (isSignedIn() && request.query.where.creatorId == request.auth.uid);
     }
   }
 }
