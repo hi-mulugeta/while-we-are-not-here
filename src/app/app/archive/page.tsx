@@ -149,13 +149,14 @@ export default function ArchivePage() {
                 <TableHead>From</TableHead>
                 <TableHead className="hidden sm:table-cell">Date</TableHead>
                 <TableHead className="hidden lg:table-cell">Message</TableHead>
-                <TableHead className="text-right">Status</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {slips && slips.length > 0 ? (
                 slips.map((slip) => (
-                  <TableRow key={slip.id} onClick={() => setSelectedSlip(slip)} className="cursor-pointer">
+                  <TableRow key={slip.id}>
                     <TableCell className="font-medium">{slip.recipient}</TableCell>
                     <TableCell>{slip.senderName}</TableCell>
                     <TableCell className="hidden sm:table-cell">
@@ -164,16 +165,22 @@ export default function ArchivePage() {
                     <TableCell className="hidden lg:table-cell max-w-xs truncate">
                       {slip.message}
                     </TableCell>
-                    <TableCell className="text-right">
+                    <TableCell>
                         {slip.statusUrgent && <Badge variant="destructive" className="mr-1">Urgent</Badge>}
                         {slip.statusRush && <Badge variant="destructive" className="mr-1">Rush</Badge>}
                         {slip.statusPleaseCall && <Badge>Please Call</Badge>}
+                    </TableCell>
+                    <TableCell className="text-right">
+                        <Button variant="ghost" size="icon" onClick={() => setSelectedSlip(slip)}>
+                            <Printer className="h-4 w-4" />
+                            <span className="sr-only">Print</span>
+                        </Button>
                     </TableCell>
                   </TableRow>
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center">
+                  <TableCell colSpan={6} className="text-center">
                     No archived messages found.
                   </TableCell>
                 </TableRow>
