@@ -13,13 +13,14 @@ service cloud.firestore {
 
     // Security Rules for User Profiles
     match /users/{userId} {
-      // ANY authenticated user can create their own profile
-      allow create: if isOwner(userId);
+      // ANY authenticated user can create their own profile, as long as the UID matches.
+      allow create: if isSignedIn() && request.resource.data.uid == request.auth.uid;
       
       // Users can get their own profile, Admins can get any profile
       allow get: if isOwner(userId) || get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
       
-      // Users can update their own profile, Admins can update any profile (e.g., to change a role)
+      // Users can update their own profile. Admins can update any profile (e.g., to change a role).
+      // The `isOwner` check works for updates because the document (resource) already exists.
       allow update: if isOwner(userId) || get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
       
       // Only admins can list users
