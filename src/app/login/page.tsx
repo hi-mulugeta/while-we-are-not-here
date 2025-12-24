@@ -16,10 +16,12 @@ import {
 } from '@/components/ui/card';
 import { Chrome } from 'lucide-react';
 import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
+import { useToast } from '@/hooks/use-toast';
 
 export default function LoginPage() {
   const { auth, firestore, user, isUserLoading } = useFirebase();
   const router = useRouter();
+  const { toast } = useToast();
 
   useEffect(() => {
     if (!isUserLoading && user) {
@@ -44,8 +46,21 @@ export default function LoginPage() {
         role: 'user', // Default role
       }, { merge: true });
 
-    } catch (error) {
-      console.error('Error signing in with Google:', error);
+    } catch (error: any) {
+      if (error?.code === 'auth/popup-closed-by-user') {
+        toast({
+            title: "Sign-in Canceled",
+            description: "You closed the sign-in window. Please try again.",
+            variant: "default",
+        });
+      } else {
+        console.error('Error signing in with Google:', error);
+        toast({
+            title: "Authentication Error",
+            description: "An unexpected error occurred during sign-in. Please try again later.",
+            variant: "destructive",
+        });
+      }
     }
   };
   
