@@ -1,16 +1,16 @@
 'use client';
 
 import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
+import Link from 'next/link';
 import { LogOut, Home, Archive, UserCog, Shield } from 'lucide-react';
 
 import { useFirebase } from '@/firebase';
+import { useUserProfile } from '@/hooks/use-user-profile';
 import { Button } from '@/components/ui/button';
 import { SidebarProvider, Sidebar, SidebarTrigger, SidebarContent, SidebarHeader, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarFooter } from '@/components/ui/sidebar';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { useUserProfile } from '@/hooks/use-user-profile';
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+
 
 export default function AppLayout({
   children,
@@ -23,6 +23,7 @@ export default function AppLayout({
   const pathname = usePathname();
 
   useEffect(() => {
+    // If auth state is not loading and there's no user, redirect to login.
     if (!isUserLoading && !user) {
       router.push('/login');
     }
@@ -34,16 +35,18 @@ export default function AppLayout({
     }
   };
 
-  if (isUserLoading || isProfileLoading) {
+  // While checking for the user, show a global loading screen.
+  if (isUserLoading) {
     return <div className="flex h-screen items-center justify-center">Loading...</div>;
   }
   
+  // If no user, useEffect will trigger redirect, so we render nothing to avoid flicker.
   if (!user) {
-    // This will be handled by the useEffect, but it's good practice
-    // to prevent rendering children if the user is not logged in.
-    return null; 
+    return null;
   }
 
+  // At this point, user is authenticated. Now we can show the layout.
+  // We can show another loader while profile is loading inside the layout.
   return (
     <SidebarProvider>
       <Sidebar>
@@ -62,29 +65,35 @@ export default function AppLayout({
         <SidebarContent>
             <SidebarMenu>
                 <SidebarMenuItem>
-                    <SidebarMenuButton asChild isActive={pathname === '/app'}>
-                        <Link href="/app">
-                            <Home />
-                            <span>Home</span>
-                        </Link>
-                    </SidebarMenuButton>
+                    <Link href="/app" passHref legacyBehavior>
+                        <SidebarMenuButton asChild isActive={pathname === '/app'}>
+                            <a>
+                                <Home />
+                                <span>Home</span>
+                            </a>
+                        </SidebarMenuButton>
+                    </Link>
                 </SidebarMenuItem>
                 <SidebarMenuItem>
-                    <SidebarMenuButton asChild isActive={pathname === '/app/archive'}>
-                        <Link href="/app/archive">
-                            <Archive />
-                            <span>Archive</span>
-                        </Link>
-                    </SidebarMenuButton>
+                    <Link href="/app/archive" passHref legacyBehavior>
+                        <SidebarMenuButton asChild isActive={pathname === '/app/archive'}>
+                            <a>
+                                <Archive />
+                                <span>Archive</span>
+                            </a>
+                        </SidebarMenuButton>
+                    </Link>
                 </SidebarMenuItem>
                 {profile?.role === 'admin' && (
                     <SidebarMenuItem>
-                        <SidebarMenuButton asChild isActive={pathname === '/app/admin'}>
-                            <Link href="/app/admin">
-                                <UserCog />
-                                <span>Admin</span>
-                            </Link>
-                        </SidebarMenuButton>
+                         <Link href="/app/admin" passHref legacyBehavior>
+                            <SidebarMenuButton asChild isActive={pathname === '/app/admin'}>
+                               <a>
+                                 <UserCog />
+                                 <span>Admin</span>
+                               </a>
+                            </SidebarMenuButton>
+                        </Link>
                     </SidebarMenuItem>
                 )}
             </SidebarMenu>
@@ -100,11 +109,17 @@ export default function AppLayout({
         <header className="flex h-14 items-center justify-between border-b bg-background px-4">
             <SidebarTrigger />
             <div className='flex items-center gap-2'>
-                <Shield size={16} className='text-muted-foreground' />
-                <span className='text-sm text-muted-foreground font-medium'>{profile?.role}</span>
+                {isProfileLoading ? (
+                    <span className='text-sm text-muted-foreground font-medium'>...</span>
+                ) : (
+                    <>
+                        <Shield size={16} className='text-muted-foreground' />
+                        <span className='text-sm text-muted-foreground font-medium'>{profile?.role}</span>
+                    </>
+                )}
             </div>
         </header>
-        {children}
+        {isProfileLoading ? <div className="p-8">Loading profile...</div> : children}
       </main>
     </SidebarProvider>
   );
