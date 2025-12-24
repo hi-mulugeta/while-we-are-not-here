@@ -10,6 +10,10 @@ service cloud.firestore {
     function isOwner(userId) {
       return isSignedIn() && request.auth.uid == userId;
     }
+    
+    function isAdmin() {
+      return isSignedIn() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
 
     // Security Rules for User Profiles
     match /users/{userId} {
@@ -17,14 +21,13 @@ service cloud.firestore {
       allow create: if isSignedIn() && request.resource.data.uid == request.auth.uid;
       
       // Users can get their own profile, Admins can get any profile
-      allow get: if isOwner(userId) || get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+      allow get: if isOwner(userId) || isAdmin();
       
       // Users can update their own profile. Admins can update any profile (e.g., to change a role).
-      // The `isOwner` check works for updates because the document (resource) already exists.
-      allow update: if isOwner(userId) || get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+      allow update: if isOwner(userId) || isAdmin();
       
       // Only admins can list users
-      allow list: if get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+      allow list: if isAdmin();
       
       // Deletion is disallowed for safety
       allow delete: if false;
@@ -35,14 +38,18 @@ service cloud.firestore {
       // ANY authenticated user can create a message slip, as long as they are the creator
       allow create: if isSignedIn() && request.resource.data.creatorId == request.auth.uid;
       
-      // Users can get their own message slips, Admins can get any
-      allow get: if isSignedIn() && (resource.data.creatorId == request.auth.uid || get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin');
-      
-      // Admins can list all message slips, users can list their own
-      allow list: if isSignedIn();
+      // Users can read their own slips, admins can read any.
+      allow read: if (isSignedIn() && resource.data.creatorId == request.auth.uid) || isAdmin();
       
       // Only the creator can update or delete their own message slip
       allow update, delete: if isSignedIn() && resource.data.creatorId == request.auth.uid;
+    }
+    
+    // This rule allows the specific queries made by the app
+    match /messageSlips/{messageSlipId} {
+        // Admins can list all slips.
+        // Users can only list slips they created.
+        allow list: if isAdmin() || (isSignedIn() && request.query.where.get('creatorId', ['in'])[0] == request.auth.uid);
     }
   }
 }
