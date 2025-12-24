@@ -12,43 +12,47 @@ service cloud.firestore {
     }
     
     function isAdmin() {
+      // Check if the user document exists and has the role 'admin'
       return isSignedIn() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
     }
 
     // Security Rules for User Profiles
     match /users/{userId} {
-      // ANY authenticated user can create their own profile, as long as the UID matches.
+      // ANY authenticated user can create their own profile.
       allow create: if isSignedIn() && request.resource.data.uid == request.auth.uid;
       
-      // Users can get their own profile, Admins can get any profile
+      // Users can get their own profile, Admins can get any profile.
       allow get: if isOwner(userId) || isAdmin();
       
-      // Users can update their own profile. Admins can update any profile (e.g., to change a role).
+      // Users can update their own profile. Admins can update any profile.
       allow update: if isOwner(userId) || isAdmin();
       
-      // Only admins can list users
+      // Only admins can list users.
       allow list: if isAdmin();
       
-      // Deletion is disallowed for safety
+      // Deletion is disallowed for safety.
       allow delete: if false;
     }
 
     // Security Rules for individual Message Slip documents
     match /messageSlips/{messageSlipId} {
-      // ANY authenticated user can create a message slip, as long as they are the creator
+      // ANY authenticated user can create a message slip, as long as they are the creator.
       allow create: if isSignedIn() && request.resource.data.creatorId == request.auth.uid;
       
-      // Users can read their own slips, admins can read any.
+      // Users can read their own slips. Admins can read any slip.
       allow read: if (isSignedIn() && resource.data.creatorId == request.auth.uid) || isAdmin();
       
-      // Only the creator can update or delete their own message slip
+      // Only the creator can update or delete their own message slip.
       allow update, delete: if isSignedIn() && resource.data.creatorId == request.auth.uid;
+
+      // LIST rule should not be on a document match. It should be on a collection match.
+      allow list: if false; // Explicitly deny listing individual documents this way.
     }
     
-    // Security Rules for queries on the messageSlips collection
-    match /messageSlips/{document=**} {
+    // Correct security rules for querying the messageSlips collection.
+    match /messageSlips/{document} {
         // Admins can list all slips.
-        // Users can only list slips they created.
+        // Regular users can only list slips where their UID matches the creatorId in the query.
         allow list: if isAdmin() || (isSignedIn() && request.query.where.creatorId == request.auth.uid);
     }
   }
