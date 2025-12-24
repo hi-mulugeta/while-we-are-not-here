@@ -12,6 +12,7 @@ import { z } from 'genkit';
 
 const AnalyzeMessageInputSchema = z.object({
   message: z.string().describe('The message content to analyze.'),
+  language: z.string().optional().describe('The language for the analysis, e.g., "en" or "am".'),
 });
 export type AnalyzeMessageInput = z.infer<typeof AnalyzeMessageInputSchema>;
 
@@ -48,6 +49,8 @@ const analyzeMessageFlow = ai.defineFlow(
       input: { schema: AnalyzeMessageInputSchema },
       output: { schema: AnalyzeMessageOutputSchema },
       prompt: `You are an expert communication assistant. Your task is to analyze the following message for its tone, clarity, and effectiveness.
+        
+        Provide the analysis in the following language: {{#if language === 'am'}}Amharic{{else}}English{{/if}}.
 
         Message to Analyze:
         "{{{message}}}"
@@ -57,7 +60,7 @@ const analyzeMessageFlow = ai.defineFlow(
         2.  **Clarity Score**: Rate the message on a scale of 1 to 10, where 1 is "very confusing" and 10 is "perfectly clear and concise."
         3.  **Suggestions**: Offer a few brief, actionable suggestions for how to improve the message. If the message is already excellent, you can provide fewer suggestions or simply state that it's well-written. Focus on clarity, impact, and professionalism.
         
-        Return the analysis in the specified JSON format.`,
+        Return the analysis in the specified JSON format, with all text translated to the requested language.`,
     });
 
     const { output } = await prompt(input);

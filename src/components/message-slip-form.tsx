@@ -40,6 +40,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "./ui/dialog";
 import { Badge } from "./ui/badge";
 import { Progress } from "./ui/progress";
+import { RadioGroup, RadioGroupItem } from "./ui/radio-group";
 
 const formSchema = z.object({
   recipient: z.string().min(1, { message: "Recipient is required." }),
@@ -65,15 +66,112 @@ const formSchema = z.object({
 export type FormValues = z.infer<typeof formSchema>;
 
 const statusCheckboxes = [
-  { id: "statusTelephoned", label: "Telephoned" },
-  { id: "statusCameToSeeYou", label: "Came to see you" },
-  { id: "statusWantsToSeeYou", label: "Wants to see you" },
-  { id: "statusReturnedCall", label: "Returned your call" },
-  { id: "statusPleaseCall", label: "Please call" },
-  { id: "statusWillCallAgain", label: "Will call again" },
-  { id: "statusUrgent", label: "Urgent" },
-  { id: "statusRush", label: "Rush" },
+  { id: "statusTelephoned", en: "Telephoned", am: "ተደውሎ ነበር" },
+  { id: "statusCameToSeeYou", en: "Came to see you", am: "እርስዎን ለማየት መጥቶ ነበር" },
+  { id: "statusWantsToSeeYou", en: "Wants to see you", am: "ሊያይዎት ይፈልጋል" },
+  { id: "statusReturnedCall", en: "Returned your call", am: "ጥሪዎን መልሷል" },
+  { id: "statusPleaseCall", en: "Please call", am: "እባክዎ ይደውሉ" },
+  { id: "statusWillCallAgain", en: "Will call again", am: "እንደገና ይደውላል" },
+  { id: "statusUrgent", en: "Urgent", am: "አስቸኳይ" },
+  { id: "statusRush", en: "Rush", am: "በጣም አስቸኳይ" },
 ] as const;
+
+const translations = {
+  en: {
+    importantMessage: "Important Message",
+    formDescription: "Fill out the form to create a new message slip. Use the AI tools to improve your message.",
+    for: "For",
+    recipientPlaceholder: "Recipient's Name",
+    date: "Date",
+    pickDate: "Pick a date",
+    time: "Time",
+    from: "From",
+    senderNamePlaceholder: "Sender's Name",
+    senderOrg: "Of (Company/Org)",
+    senderOrgPlaceholder: "Sender's Organization",
+    phone: "Phone Number",
+    phonePlaceholder: "Sender's Phone",
+    messageType: "Message Type",
+    message: "Message",
+    messagePlaceholder: "Type your message here...",
+    createMessageSlip: "Create Message Slip",
+    previewActions: "Preview & Actions",
+    previewDescription: "This is a preview of your generated message slip.",
+    clear: "Clear",
+    analyze: "Analyze",
+    humanize: "Humanize",
+    print: "Print",
+    exportPng: "Export PNG",
+    exportPdf: "Export PDF",
+    analysisTitle: "Message Analysis",
+    analysisDescription: "Here's the AI's feedback on your message.",
+    tone: "Tone",
+    clarityScore: "Clarity Score",
+    suggestions: "Suggestions",
+    approveAi: "Approve",
+    aiSummary: "AI Summary",
+    approved: "Approved",
+    messageLabel: "Message",
+    missingInfo: "Missing Information",
+    missingInfoDesc: "Please fill out the recipient, sender, and message fields before using AI features.",
+    aiHumanizeSuccess: "Message Humanized!",
+    aiHumanizeSuccessDesc: "The AI summary has been added to the preview.",
+    aiError: "AI Error",
+    aiHumanizeError: "Could not generate the humanized message.",
+    missingMessage: "Missing Message",
+    missingMessageDesc: "Please enter a message to analyze.",
+    aiAnalyzeError: "Could not analyze the message.",
+    aiApproveSuccess: "AI Summary Approved",
+    aiApproveSuccessDesc: "The original message has been updated.",
+  },
+  am: {
+    importantMessage: "አስፈላጊ መልዕክት",
+    formDescription: "አዲስ የመልዕክት ወረቀት ለመፍጠር ቅጹን ይሙሉ:: የመልዕክትዎን ጥራት ለማሻሻል የ AI መሣሪያዎችን ይጠቀሙ::",
+    for: "ለ",
+    recipientPlaceholder: "የተቀባይ ስም",
+    date: "ቀን",
+    pickDate: "ቀን ይምረጡ",
+    time: "ሰዓት",
+    from: "ከ",
+    senderNamePlaceholder: "የላኪ ስም",
+    senderOrg: "የድርጅት ስም",
+    senderOrgPlaceholder: "የላኪ ድርጅት",
+    phone: "ስልክ ቁጥር",
+    phonePlaceholder: "የላኪ ስልክ",
+    messageType: "የመልዕክት ዓይነት",
+    message: "መልዕክት",
+    messagePlaceholder: "መልዕክትዎን እዚህ ይጻፉ...",
+    createMessageSlip: "የመልዕክት ወረቀት ፍጠር",
+    previewActions: "ቅድመ-ዕይታ እና ድርጊቶች",
+    previewDescription: "ይህ እርስዎ የፈጠሩት የመልዕክት ወረቀት ቅድመ-ዕይታ ነው።",
+    clear: "አጽዳ",
+    analyze: "ተንትን",
+    humanize: "ሰዋዊ አድርግ",
+    print: "አትም",
+    exportPng: "PNG ላክ",
+    exportPdf: "PDF ላክ",
+    analysisTitle: "የመልዕክት ትንተና",
+    analysisDescription: "የ AI ግብረመልስ በመልዕክትዎ ላይ።",
+    tone: "ቃና",
+    clarityScore: "የግልጽነት ነጥብ",
+    suggestions: "የማሻሻያ ሐሳቦች",
+    approveAi: "አጽድቅ",
+    aiSummary: "የ AI ማጠቃለያ",
+    approved: "ጸድቋል",
+    messageLabel: "መልዕክት",
+    missingInfo: "ያልተሟላ መረጃ",
+    missingInfoDesc: "የ AI ባህሪያትን ከመጠቀምዎ በፊት እባክዎ የተቀባይ፣ የላኪ እና የመልዕክት መስኮችን ይሙሉ።",
+    aiHumanizeSuccess: "መልዕክቱ ሰዋዊ ሆኗል!",
+    aiHumanizeSuccessDesc: "የ AI ማጠቃለያው በቅድመ-ዕይታ ላይ ተጨምሯል።",
+    aiError: "የ AI ስህተት",
+    aiHumanizeError: "ሰዋዊ መልዕክት መፍጠር አልተቻለም።",
+    missingMessage: "የጎደለ መልዕክት",
+    missingMessageDesc: "እባክዎ ለመተንተን መልዕክት ያስገቡ።",
+    aiAnalyzeError: "መልዕክቱን መተንተን አልተቻለም።",
+    aiApproveSuccess: "የ AI ማጠቃለያ ጸድቋል",
+    aiApproveSuccessDesc: "ዋናው መልዕክት ተዘምኗል።",
+  }
+}
 
 
 export default function MessageSlipForm() {
@@ -82,11 +180,14 @@ export default function MessageSlipForm() {
   const [isAiMessageApproved, setIsAiMessageApproved] = useState(false);
   const [analysisResult, setAnalysisResult] = useState<AnalyzeMessageOutput | null>(null);
   const [isAnalysisDialogOpen, setIsAnalysisDialogOpen] = useState(false);
+  const [language, setLanguage] = useState<"en" | "am">("en");
 
   const [isHumanizePending, startHumanizeTransition] = useTransition();
   const [isAnalyzePending, startAnalyzeTransition] = useTransition();
   const printRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
+
+  const T = translations[language];
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -126,36 +227,33 @@ export default function MessageSlipForm() {
       if (!recipient || !senderName || !message) {
         toast({
           variant: "destructive",
-          title: "Missing Information",
-          description: "Please fill out the recipient, sender, and message fields before humanizing.",
+          title: T.missingInfo,
+          description: T.missingInfoDesc,
         });
         return;
       }
 
-      const messageContext = Object.entries(statuses)
-        .filter(([key, value]) => key.startsWith('status') && value)
-        .map(([key]) => {
-          const status = statusCheckboxes.find(s => s.id === key);
-          return status ? status.label : '';
-        })
+      const messageContext = statusCheckboxes
+        .filter(status => statuses[status.id])
+        .map(status => status[language])
         .join(', ');
       
-      const input: HumanizeMessageInput = { recipient, senderName, message, messageContext };
+      const input: HumanizeMessageInput = { recipient, senderName, message, messageContext, language };
 
       try {
         const { humanizedMessage: hMessage } = await humanizeMessage(input);
         setHumanizedMessage(hMessage);
         setIsAiMessageApproved(false);
         toast({
-          title: "Message Humanized!",
-          description: "The AI summary has been added to the preview.",
+          title: T.aiHumanizeSuccess,
+          description: T.aiHumanizeSuccessDesc,
         });
       } catch (error) {
         console.error("Failed to humanize message:", error);
         toast({
           variant: "destructive",
-          title: "AI Error",
-          description: "Could not generate the humanized message.",
+          title: T.aiError,
+          description: T.aiHumanizeError,
         });
       }
     });
@@ -167,22 +265,22 @@ export default function MessageSlipForm() {
       if (!message) {
         toast({
           variant: "destructive",
-          title: "Missing Message",
-          description: "Please enter a message to analyze.",
+          title: T.missingMessage,
+          description: T.missingMessageDesc,
         });
         return;
       }
 
       try {
-        const result = await analyzeMessage({ message });
+        const result = await analyzeMessage({ message, language });
         setAnalysisResult(result);
         setIsAnalysisDialogOpen(true);
       } catch (error) {
         console.error("Failed to analyze message:", error);
         toast({
           variant: "destructive",
-          title: "AI Error",
-          description: "Could not analyze the message.",
+          title: T.aiError,
+          description: T.aiAnalyzeError,
         });
       }
     });
@@ -193,8 +291,8 @@ export default function MessageSlipForm() {
       form.setValue("message", humanizedMessage);
       setIsAiMessageApproved(true);
       toast({
-        title: "AI Summary Approved",
-        description: "The original message has been updated.",
+        title: T.aiApproveSuccess,
+        description: T.aiApproveSuccessDesc,
       });
     }
   };
@@ -288,28 +386,46 @@ export default function MessageSlipForm() {
 
 
   return (
-    <div className="grid grid-cols-1 gap-8 lg:grid-cols-1">
+    <div className="grid grid-cols-1 gap-8">
       <Card className="w-full no-print">
         <CardHeader>
           <CardTitle className="font-headline text-2xl tracking-wider">
-            Important Message
+            {T.importantMessage}
           </CardTitle>
           <CardDescription>
-            Fill out the form to create a new message slip. Use the AI tools to improve your message.
+            {T.formDescription}
           </CardDescription>
         </CardHeader>
         <CardContent>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+               <div className="space-y-2">
+                <FormLabel>Language / ቋንቋ</FormLabel>
+                <RadioGroup
+                  defaultValue="en"
+                  onValueChange={(value: "en" | "am") => setLanguage(value)}
+                  className="flex gap-4"
+                >
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="en" id="r1" />
+                    <FormLabel htmlFor="r1" className="font-normal">English</FormLabel>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="am" id="r2" />
+                    <FormLabel htmlFor="r2" className="font-normal">Amharic (አማርኛ)</FormLabel>
+                  </div>
+                </RadioGroup>
+              </div>
+
               <div className="space-y-4">
                  <FormField
                   control={form.control}
                   name="recipient"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>For</FormLabel>
+                      <FormLabel>{T.for}</FormLabel>
                       <FormControl>
-                        <Input placeholder="Recipient's Name" {...field} />
+                        <Input placeholder={T.recipientPlaceholder} {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -321,7 +437,7 @@ export default function MessageSlipForm() {
                     name="date"
                     render={({ field }) => (
                       <FormItem className="flex flex-col">
-                        <FormLabel>Date</FormLabel>
+                        <FormLabel>{T.date}</FormLabel>
                         <Popover>
                           <PopoverTrigger asChild>
                             <FormControl>
@@ -336,7 +452,7 @@ export default function MessageSlipForm() {
                                 {field.value ? (
                                   format(field.value, "PPP")
                                 ) : (
-                                  <span>Pick a date</span>
+                                  <span>{T.pickDate}</span>
                                 )}
                               </Button>
                             </FormControl>
@@ -359,7 +475,7 @@ export default function MessageSlipForm() {
                     name="time"
                     render={({ field }) => (
                       <FormItem className="flex flex-col">
-                        <FormLabel>Time</FormLabel>
+                        <FormLabel>{T.time}</FormLabel>
                         <FormControl>
                           <Input type="time" {...field} />
                         </FormControl>
@@ -379,9 +495,9 @@ export default function MessageSlipForm() {
                       name="senderName"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>From</FormLabel>
+                          <FormLabel>{T.from}</FormLabel>
                           <FormControl>
-                            <Input placeholder="Sender's Name" {...field} />
+                            <Input placeholder={T.senderNamePlaceholder} {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -392,9 +508,9 @@ export default function MessageSlipForm() {
                       name="senderOrg"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Of (Company/Org)</FormLabel>
+                          <FormLabel>{T.senderOrg}</FormLabel>
                           <FormControl>
-                            <Input placeholder="Sender's Organization" {...field} />
+                            <Input placeholder={T.senderOrgPlaceholder} {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -406,9 +522,9 @@ export default function MessageSlipForm() {
                     name="phone"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Phone Number</FormLabel>
+                        <FormLabel>{T.phone}</FormLabel>
                         <FormControl>
-                          <Input placeholder="Sender's Phone" {...field} />
+                          <Input placeholder={T.phonePlaceholder} {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -419,7 +535,7 @@ export default function MessageSlipForm() {
               <Separator />
 
               <div className="space-y-4">
-                <FormLabel>Message Type</FormLabel>
+                <FormLabel>{T.messageType}</FormLabel>
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
                   {statusCheckboxes.map((item) => (
                     <FormField
@@ -435,7 +551,7 @@ export default function MessageSlipForm() {
                             />
                           </FormControl>
                           <FormLabel className="font-normal text-sm">
-                            {item.label}
+                            {item[language]}
                           </FormLabel>
                         </FormItem>
                       )}
@@ -453,11 +569,11 @@ export default function MessageSlipForm() {
                   name="message"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Message</FormLabel>
+                      <FormLabel>{T.message}</FormLabel>
                       <FormControl>
                         <Textarea
                           className="min-h-[140px] resize-y"
-                          placeholder="Type your message here..."
+                          placeholder={T.messagePlaceholder}
                           {...field}
                         />
                       </FormControl>
@@ -466,7 +582,7 @@ export default function MessageSlipForm() {
                   )}
                 />
               </div>
-              <Button type="submit" className="w-full">Create Message Slip</Button>
+              <Button type="submit" className="w-full">{T.createMessageSlip}</Button>
             </form>
           </Form>
         </CardContent>
@@ -474,9 +590,9 @@ export default function MessageSlipForm() {
       <div className="flex flex-col gap-4">
           <Card className="w-full">
             <CardHeader className="no-print">
-                <CardTitle>Preview &amp; Actions</CardTitle>
+                <CardTitle>{T.previewActions}</CardTitle>
                 <CardDescription>
-                    This is a preview of your generated message slip.
+                    {T.previewDescription}
                 </CardDescription>
             </CardHeader>
             <CardContent>
@@ -487,13 +603,14 @@ export default function MessageSlipForm() {
                         humanizedMessage={humanizedMessage}
                         onApprove={handleApproveAiMessage}
                         isApproved={isAiMessageApproved}
+                        language={language}
                       />
                     </div>
                 </div>
             </CardContent>
             <CardFooter className="flex-col sm:flex-row gap-2 no-print">
                 <Button type="button" variant="ghost" onClick={handleClearForm} className="w-full sm:w-auto">
-                    <Trash2 className="mr-2 h-4 w-4" /> Clear
+                    <Trash2 className="mr-2 h-4 w-4" /> {T.clear}
                 </Button>
                 <div className="flex w-full sm:w-auto sm:ml-auto gap-2 flex-wrap justify-center">
                     <Button
@@ -504,7 +621,7 @@ export default function MessageSlipForm() {
                         className="flex-1"
                     >
                         {isAnalyzePending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <BrainCircuit className="mr-2 h-4 w-4" />}
-                        Analyze
+                        {T.analyze}
                     </Button>
                     <Button
                         type="button"
@@ -514,16 +631,16 @@ export default function MessageSlipForm() {
                         className="flex-1"
                     >
                         {isHumanizePending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Bot className="mr-2 h-4 w-4" />}
-                        Humanize
+                        {T.humanize}
                     </Button>
                     <Button type="button" variant="outline" onClick={handlePrint} disabled={!isFormSubmitted} className="flex-1">
-                        <Printer className="mr-2 h-4 w-4" /> Print
+                        <Printer className="mr-2 h-4 w-4" /> {T.print}
                     </Button>
                     <Button type="button" onClick={handleExportPng} disabled={!isFormSubmitted} className="flex-1">
-                        <Camera className="mr-2 h-4 w-4" /> Export PNG
+                        <Camera className="mr-2 h-4 w-4" /> {T.exportPng}
                     </Button>
                     <Button type="button" onClick={handleExportPdf} disabled={!isFormSubmitted} className="flex-1">
-                        <FileDown className="mr-2 h-4 w-4" /> Export PDF
+                        <FileDown className="mr-2 h-4 w-4" /> {T.exportPdf}
                     </Button>
                 </div>
             </CardFooter>
@@ -535,27 +652,27 @@ export default function MessageSlipForm() {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <BrainCircuit className="h-6 w-6" />
-              Message Analysis
+              {T.analysisTitle}
             </DialogTitle>
             <DialogDescription>
-              Here's the AI's feedback on your message.
+              {T.analysisDescription}
             </DialogDescription>
           </DialogHeader>
           {analysisResult && (
             <div className="space-y-4 py-4">
               <div className="space-y-2">
-                <h3 className="text-sm font-semibold uppercase text-muted-foreground">Tone</h3>
+                <h3 className="text-sm font-semibold uppercase text-muted-foreground">{T.tone}</h3>
                 <Badge variant="secondary" className="text-base">{analysisResult.tone}</Badge>
               </div>
               <div className="space-y-2">
-                <h3 className="text-sm font-semibold uppercase text-muted-foreground">Clarity Score</h3>
+                <h3 className="text-sm font-semibold uppercase text-muted-foreground">{T.clarityScore}</h3>
                 <div className="flex items-center gap-2">
                    <Progress value={analysisResult.clarityScore * 10} className="w-full h-3" />
                    <span className="font-bold text-lg">{analysisResult.clarityScore}/10</span>
                 </div>
               </div>
               <div className="space-y-2">
-                <h3 className="text-sm font-semibold uppercase text-muted-foreground">Suggestions</h3>
+                <h3 className="text-sm font-semibold uppercase text-muted-foreground">{T.suggestions}</h3>
                 <ul className="space-y-2 list-none">
                   {analysisResult.suggestions.map((suggestion, index) => (
                     <li key={index} className="flex items-start gap-3 text-sm">

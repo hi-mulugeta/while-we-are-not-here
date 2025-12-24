@@ -15,6 +15,7 @@ const HumanizeMessageInputSchema = z.object({
     recipient: z.string().describe("The name of the person the message is for."),
     message: z.string().describe("The raw message content."),
     messageContext: z.string().describe("Additional context about the message, such as 'Urgent' or 'Telephoned'."),
+    language: z.string().optional().describe('The language for the output, e.g., "en" or "am".'),
 });
 export type HumanizeMessageInput = z.infer<typeof HumanizeMessageInputSchema>;
 
@@ -39,6 +40,8 @@ const humanizeMessageFlow = ai.defineFlow(
         prompt: `You are a helpful office assistant. Your task is to rewrite a short, formal message into a more natural, human-friendly summary.
         The message is for {{{recipient}}} from {{{senderName}}}.
 
+        Please provide the summary in the following language: {{#if language === 'am'}}Amharic{{else}}English{{/if}}.
+
         Original Message:
         "{{{message}}}"
         
@@ -50,7 +53,7 @@ const humanizeMessageFlow = ai.defineFlow(
         Keep it concise and clear.
         Do not add any information that is not in the original message.
 
-        Example:
+        Example (for English):
         Original: "Please call Mr. Smith at 555-1234 regarding the quarterly report."
         Context: "Urgent, Please call"
         Summary: "Quick note - Mr. Smith called about the quarterly report. He said it's urgent and would like you to call him back at 555-1234."
