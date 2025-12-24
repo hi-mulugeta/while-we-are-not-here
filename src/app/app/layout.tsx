@@ -65,33 +65,33 @@ export default function AppLayout({
         <SidebarContent>
             <SidebarMenu>
                 <SidebarMenuItem>
-                    <Link href="/app" passHref legacyBehavior>
+                    <Link href="/app" passHref>
                         <SidebarMenuButton asChild isActive={pathname === '/app'}>
-                            <a>
+                            <span>
                                 <Home />
                                 <span>Home</span>
-                            </a>
+                            </span>
                         </SidebarMenuButton>
                     </Link>
                 </SidebarMenuItem>
                 <SidebarMenuItem>
-                    <Link href="/app/archive" passHref legacyBehavior>
+                    <Link href="/app/archive" passHref>
                         <SidebarMenuButton asChild isActive={pathname === '/app/archive'}>
-                            <a>
+                            <span>
                                 <Archive />
                                 <span>Archive</span>
-                            </a>
+                            </span>
                         </SidebarMenuButton>
                     </Link>
                 </SidebarMenuItem>
                 {profile?.role === 'admin' && (
                     <SidebarMenuItem>
-                         <Link href="/app/admin" passHref legacyBehavior>
+                         <Link href="/app/admin" passHref>
                             <SidebarMenuButton asChild isActive={pathname === '/app/admin'}>
-                               <a>
+                               <span>
                                  <UserCog />
                                  <span>Admin</span>
-                               </a>
+                               </span>
                             </SidebarMenuButton>
                         </Link>
                     </SidebarMenuItem>
