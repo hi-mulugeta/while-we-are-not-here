@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview A flow to analyze the tone and style of a message.
@@ -50,7 +51,7 @@ const analyzeMessageFlow = ai.defineFlow(
       output: { schema: AnalyzeMessageOutputSchema },
       prompt: `You are an expert communication assistant. Your task is to analyze the following message for its tone, clarity, and effectiveness.
         
-        Provide the analysis in the following language: {{#if language}}{{#ifeq language "am"}}Amharic{{else}}English{{/ifeq}}{{else}}English{{/if}}.
+        Provide the analysis in the following language: {{#if (eq language "am")}}Amharic{{else}}English{{/if}}.
 
         Message to Analyze:
         "{{{message}}}"
