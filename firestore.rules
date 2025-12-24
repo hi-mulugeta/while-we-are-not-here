@@ -45,11 +45,11 @@ service cloud.firestore {
       allow update, delete: if isSignedIn() && resource.data.creatorId == request.auth.uid;
     }
     
-    // This rule allows the specific queries made by the app
-    match /messageSlips/{messageSlipId} {
+    // Rules for queries on the messageSlips collection
+    match /messageSlips/{document=**} {
         // Admins can list all slips.
         // Users can only list slips they created.
-        allow list: if isAdmin() || (isSignedIn() && request.query.where.get('creatorId', ['in'])[0] == request.auth.uid);
+        allow list: if isAdmin() || (isSignedIn() && request.query.where['creatorId'] == request.auth.uid);
     }
   }
 }
