@@ -45,10 +45,6 @@ service cloud.firestore {
       
       // Only the creator can update or delete their own message slip.
       allow update, delete: if isSignedIn() && resource.data.creatorId == request.auth.uid;
-
-      // Admins can list all documents. Regular users cannot perform a collection-wide list.
-      // Their queries are secured by the 'read' rule above.
-      allow list: if isAdmin();
     }
   }
 }
