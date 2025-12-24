@@ -43,7 +43,7 @@ export default function LoginPage() {
         email: user.email,
         displayName: user.displayName,
         photoURL: user.photoURL,
-        role: 'user', // Default role
+        role: 'admin', // Default role is now admin
       }, { merge: true });
 
     } catch (error: any) {

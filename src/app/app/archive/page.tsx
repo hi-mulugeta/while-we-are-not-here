@@ -25,16 +25,11 @@ export default function ArchivePage() {
     if (!firestore || !user) return null;
     
     const baseQuery = collection(firestore, 'messageSlips');
-
-    if (profile?.role === 'admin') {
-      // Admins can see all slips, ordered by most recent
-      return query(baseQuery, orderBy('createdAt', 'desc'));
-    }
     
-    // Regular users can only see their own slips, ordered by most recent
+    // All users (including admins) should only see their own slips on this page.
     return query(baseQuery, where('creatorId', '==', user.uid), orderBy('createdAt', 'desc'));
 
-  }, [firestore, user, profile]);
+  }, [firestore, user]);
 
   const { data: slips, isLoading } = useCollection(slipsQuery);
 
@@ -48,7 +43,7 @@ export default function ArchivePage() {
         <CardHeader>
           <CardTitle>Message Archive</CardTitle>
           <CardDescription>
-            {profile?.role === 'admin' ? 'Viewing all message slips.' : 'Viewing your created message slips.'}
+            Viewing your created message slips.
           </CardDescription>
         </CardHeader>
         <CardContent>
