@@ -7,6 +7,7 @@ import * as z from "zod";
 import { format } from "date-fns";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
+import { collection, serverTimestamp } from "firebase/firestore";
 
 import { humanizeMessage, type HumanizeMessageInput } from "@/ai/flows/humanize-message-flow";
 import { analyzeMessage, type AnalyzeMessageInput, type AnalyzeMessageOutput } from "@/ai/flows/analyze-message-flow";
@@ -33,7 +34,7 @@ import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
-import { Bot, BrainCircuit, CalendarIcon, Camera, FileDown, Lightbulb, Loader2, Printer, Trash2 } from "lucide-react";
+import { Bot, BrainCircuit, CalendarIcon, Camera, FileDown, Lightbulb, Loader2, Printer, Send, Trash2 } from "lucide-react";
 import { Separator } from "./ui/separator";
 import { MessageSlipDisplay } from "./message-slip-display";
 import { useToast } from "@/hooks/use-toast";
@@ -41,6 +42,8 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Badge } from "./ui/badge";
 import { Progress } from "./ui/progress";
 import { RadioGroup, RadioGroupItem } from "./ui/radio-group";
+import { useFirebase } from "@/firebase";
+import { addDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 
 const formSchema = z.object({
   recipient: z.string().min(1, { message: "Recipient is required." }),
@@ -79,7 +82,7 @@ const statusCheckboxes = [
 const translations = {
   en: {
     importantMessage: "Important Message",
-    formDescription: "Fill out the form to create a new message slip. Use the AI tools to improve your message.",
+    formDescription: "Fill out the form to create and archive a new message slip.",
     for: "For",
     recipientPlaceholder: "Recipient's Name",
     date: "Date",
@@ -94,7 +97,7 @@ const translations = {
     messageType: "Message Type",
     message: "Message",
     messagePlaceholder: "Type your message here...",
-    createMessageSlip: "Create Message Slip",
+    createAndArchive: "Create & Archive",
     previewActions: "Preview & Actions",
     previewDescription: "This is a preview of your generated message slip.",
     clear: "Clear",
@@ -121,12 +124,16 @@ const translations = {
     missingMessage: "Missing Message",
     missingMessageDesc: "Please enter a message to analyze.",
     aiAnalyzeError: "Could not analyze the message.",
-    aiApproveSuccess: "AI Summary Approved",
+aiApproveSuccess: "AI Summary Approved",
     aiApproveSuccessDesc: "The original message has been updated.",
+    archiveSuccess: "Message Archived!",
+    archiveSuccessDesc: "The message slip has been saved to the database.",
+    archiveError: "Archive Error",
+    archiveErrorDesc: "Could not save the message slip.",
   },
   am: {
     importantMessage: "አስፈላጊ መልዕክት",
-    formDescription: "አዲስ የመልዕክት ወረቀት ለመፍጠር ቅጹን ይሙሉ:: የመልዕክትዎን ጥራት ለማሻሻል የ AI መሣሪያዎችን ይጠቀሙ::",
+    formDescription: "አዲስ የመልዕክት ወረቀት ለመፍጠር እና ለማስቀመጥ ቅጹን ይሙሉ::",
     for: "ለ",
     recipientPlaceholder: "የተቀባይ ስም",
     date: "ቀን",
@@ -141,7 +148,7 @@ const translations = {
     messageType: "የመልዕክት ዓይነት",
     message: "መልዕክት",
     messagePlaceholder: "መልዕክትዎን እዚህ ይጻፉ...",
-    createMessageSlip: "የመልዕክት ወረቀት ፍጠር",
+    createAndArchive: "ፍጠር እና አስቀምጥ",
     previewActions: "ቅድመ-ዕይታ እና ድርጊቶች",
     previewDescription: "ይህ እርስዎ የፈጠሩት የመልዕክት ወረቀት ቅድመ-ዕይታ ነው።",
     clear: "አጽዳ",
@@ -170,9 +177,12 @@ const translations = {
     aiAnalyzeError: "መልዕክቱን መተንተን አልተቻለም።",
     aiApproveSuccess: "የ AI ማጠቃለያ ጸድቋል",
     aiApproveSuccessDesc: "ዋናው መልዕክት ተዘምኗል።",
+    archiveSuccess: "መልዕክት ተቀምጧል!",
+    archiveSuccessDesc: "የመልዕክት ወረቀቱ በመረጃ ቋቱ ውስጥ ተቀምጧል።",
+    archiveError: "የማስቀመጥ ስህተት",
+    archiveErrorDesc: "የመልዕክት ወረቀቱን ማስቀመጥ አልተቻለም።",
   }
 }
-
 
 export default function MessageSlipForm() {
   const [submittedData, setSubmittedData] = useState<FormValues | null>(null);
@@ -184,8 +194,10 @@ export default function MessageSlipForm() {
 
   const [isHumanizePending, startHumanizeTransition] = useTransition();
   const [isAnalyzePending, startAnalyzeTransition] = useTransition();
+  const [isSubmitPending, startSubmitTransition] = useTransition();
   const printRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
+  const { firestore, user } = useFirebase();
 
   const T = translations[language];
 
@@ -213,10 +225,38 @@ export default function MessageSlipForm() {
   const watchedValues = form.watch();
 
   const onSubmit = (values: FormValues) => {
-    setSubmittedData(values);
-    if (isAiMessageApproved && humanizedMessage) {
-       setSubmittedData(prev => prev ? {...prev, message: humanizedMessage} : { ...values, message: humanizedMessage });
-    }
+    startSubmitTransition(() => {
+      const finalValues = { ...values };
+      if (isAiMessageApproved && humanizedMessage) {
+        finalValues.message = humanizedMessage;
+      }
+      setSubmittedData(finalValues);
+
+      if (!firestore || !user) {
+        toast({
+          variant: "destructive",
+          title: T.archiveError,
+          description: "Firebase not initialized.",
+        });
+        return;
+      }
+
+      const messageSlipData = {
+        ...finalValues,
+        date: finalValues.date.toISOString(),
+        creatorId: user.uid,
+        createdAt: serverTimestamp(),
+      };
+      
+      const slipsCollection = collection(firestore, "messageSlips");
+      addDocumentNonBlocking(slipsCollection, messageSlipData);
+
+      toast({
+        title: T.archiveSuccess,
+        description: T.archiveSuccessDesc,
+      });
+
+    });
   };
   
   const handleHumanizeMessage = () => {
@@ -386,7 +426,7 @@ export default function MessageSlipForm() {
 
 
   return (
-    <div className="grid grid-cols-1 gap-8">
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
       <Card className="w-full no-print">
         <CardHeader>
           <CardTitle className="font-headline text-2xl tracking-wider">
@@ -582,7 +622,10 @@ export default function MessageSlipForm() {
                   )}
                 />
               </div>
-              <Button type="submit" className="w-full">{T.createMessageSlip}</Button>
+              <Button type="submit" className="w-full" disabled={isSubmitPending}>
+                {isSubmitPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
+                {T.createAndArchive}
+              </Button>
             </form>
           </Form>
         </CardContent>

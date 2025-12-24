@@ -1,209 +1,81 @@
 {
   "entities": {
-    "User": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "User",
+    "UserProfile": {
+      "title": "User Profile",
+      "description": "Represents a user's profile information.",
       "type": "object",
-      "description": "Represents a user within the MessageSlip application. Note: Actual authentication data is assumed to be managed by an external authentication system.",
       "properties": {
-        "id": {
+        "uid": {
           "type": "string",
-          "description": "Unique identifier for the user."
+          "description": "The user's unique ID from Firebase Auth."
         },
         "email": {
           "type": "string",
-          "description": "User's email address.",
-          "format": "email"
+          "format": "email",
+          "description": "The user's email address."
         },
         "displayName": {
           "type": "string",
-          "description": "User's display name."
+          "description": "The user's display name."
+        },
+        "photoURL": {
+          "type": "string",
+          "format": "uri",
+          "description": "URL of the user's profile picture."
         },
         "role": {
           "type": "string",
-          "description": "User's role within the application (e.g., 'admin', 'user')."
+          "description": "The user's role in the application.",
+          "enum": ["user", "admin"]
         }
       },
-      "required": [
-        "id",
-        "email",
-        "displayName",
-        "role"
-      ]
+      "required": ["uid", "email", "role"]
     },
     "MessageSlip": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "MessageSlip",
+      "title": "Message Slip",
+      "description": "Represents a single message slip.",
       "type": "object",
-      "description": "Represents a message slip created within the application.",
       "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the message slip."
-        },
-        "for": {
-          "type": "string",
-          "description": "The recipient of the message."
-        },
-        "date": {
-          "type": "string",
-          "description": "The date the message was taken.",
-          "format": "date-time"
-        },
-        "time": {
-          "type": "string",
-          "description": "The time the message was taken."
-        },
-        "amPm": {
-          "type": "string",
-          "description": "AM or PM."
-        },
-        "fromName": {
-          "type": "string",
-          "description": "The name of the sender."
-        },
-        "fromCompany": {
-          "type": "string",
-          "description": "The company of the sender."
-        },
-        "fromPhone": {
-          "type": "string",
-          "description": "The phone number of the sender."
-        },
-        "telephoned": {
-          "type": "boolean",
-          "description": "Status: Telephoned."
-        },
-        "cameToSeeYou": {
-          "type": "boolean",
-          "description": "Status: Came to see you."
-        },
-        "wantsToSeeYou": {
-          "type": "boolean",
-          "description": "Status: Wants to see you."
-        },
-        "returnedYourCall": {
-          "type": "boolean",
-          "description": "Status: Returned your call."
-        },
-        "urgent": {
-          "type": "boolean",
-          "description": "Status: Urgent."
-        },
-        "pleaseCall": {
-          "type": "boolean",
-          "description": "Status: Please call."
-        },
-        "willCallAgain": {
-          "type": "boolean",
-          "description": "Status: Will call again."
-        },
-        "rush": {
-          "type": "boolean",
-          "description": "Status: Rush."
-        },
-        "specialAttention": {
-          "type": "boolean",
-          "description": "Status: Special attention."
-        },
-        "sentDocuments": {
-          "type": "boolean",
-          "description": "Status: Sent documents."
-        },
-        "message": {
-          "type": "string",
-          "description": "The message content."
-        },
-        "creatorId": {
-          "type": "string",
-          "description": "Reference to User. (Relationship: User 1:N MessageSlip). The ID of the user who created the message slip."
-        }
+        "recipient": { "type": "string" },
+        "date": { "type": "string", "format": "date-time" },
+        "time": { "type": "string" },
+        "senderName": { "type": "string" },
+        "senderOrg": { "type": "string" },
+        "phone": { "type": "string" },
+        "statusTelephoned": { "type": "boolean" },
+        "statusCameToSeeYou": { "type": "boolean" },
+        "statusWantsToSeeYou": { "type": "boolean" },
+        "statusReturnedCall": { "type": "boolean" },
+        "statusUrgent": { "type": "boolean" },
+        "statusPleaseCall": { "type": "boolean" },
+        "statusWillCallAgain": { "type": "boolean" },
+        "statusRush": { "type": "boolean" },
+        "message": { "type": "string" },
+        "creatorId": { "type": "string", "description": "The UID of the user who created the slip." },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Server timestamp of when the message was created." }
       },
       "required": [
-        "id",
-        "for",
+        "recipient",
         "date",
         "time",
-        "amPm",
-        "fromName",
-        "fromCompany",
-        "fromPhone",
-        "telephoned",
-        "cameToSeeYou",
-        "wantsToSeeYou",
-        "returnedYourCall",
-        "urgent",
-        "pleaseCall",
-        "willCallAgain",
-        "rush",
-        "specialAttention",
-        "sentDocuments",
+        "senderName",
         "message",
-        "creatorId"
+        "creatorId",
+        "createdAt"
       ]
     }
   },
   "auth": {
-    "providers": [
-      "password",
-      "anonymous"
-    ]
+    "providers": ["google.com"]
   },
   "firestore": {
-    "structure": [
-      {
-        "path": "/users/{userId}",
-        "definition": {
-          "entityName": "User",
-          "schema": {
-            "$ref": "#/backend/entities/User"
-          },
-          "description": "Stores user profile information. Document ID is the Firebase Auth UID.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "The Firebase Auth UID of the user."
-            }
-          ]
-        }
-      },
-      {
-        "path": "/users/{userId}/messageSlips/{messageSlipId}",
-        "definition": {
-          "entityName": "MessageSlip",
-          "schema": {
-            "$ref": "#/backend/entities/MessageSlip"
-          },
-          "description": "Stores message slips created by the user. Enforces ownership via path-based access control. includes creatorId for explicitly representing the creator of the message slip",
-          "params": [
-            {
-              "name": "userId",
-              "description": "The Firebase Auth UID of the user who owns the message slip."
-            },
-            {
-              "name": "messageSlipId",
-              "description": "The unique ID of the message slip."
-            }
-          ]
-        }
-      },
-      {
-        "path": "/roles_admin/{userId}",
-        "definition": {
-          "entityName": "User",
-          "schema": {
-            "$ref": "#/backend/entities/User"
-          },
-          "description": "Indicates admin role. If a document exists for a user ID in this collection, the user is an admin. Existence over Content.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "The Firebase Auth UID of the admin user."
-            }
-          ]
-        }
-      }
-    ],
-    "reasoning": "This design prioritizes security and scalability for the MessageSlip application. It leverages path-based ownership for user data and a membership map for collaborative data (if needed in the future).  It adheres to the principles of Authorization Independence, Clarity of Intent, DBAC (Database-Based Access Control), and Rules Are Not Filters (QAPs). \n\n*   **Users (Root Collection `/users/{userId}`):** User profiles are stored in a root collection. The document ID is the Firebase Auth UID.  This enables easy user management and retrieval. Each user document contains profile information (email, displayName) and a `role` field for authorization.\n*   **Message Slips (Subcollection `/users/{userId}/messageSlips/{messageSlipId}`):** Message slips are stored as a subcollection of the user's document. This enforces ownership (only the user can manage their message slips) and provides a clear, hierarchical structure.  The `creatorId` field within each MessageSlip document is redundant but included for data integrity and potential future use cases (e.g., auditing or data analysis), as well as to explicitly represent the creator. \n*   **Admin Roles (Root Collection `/roles_admin/{userId}`):** This collection implements DBAC for admin roles. If a document exists for a user in this collection, they are considered an admin.  The existence of the document is more important than its content, simplifying the security rules.  The `userId` corresponds to the Firebase Auth UID.\n\n**Authorization Independence:**\nThe structure enforces authorization independence by using path-based ownership for message slips. Security rules can directly check the path to determine if the authenticated user is the owner of the message slip (`request.auth.uid == userId`). The admin status is determined by the presence of the user's ID in the `/roles_admin` collection, eliminating the need for `get()` calls to other documents. The design eliminates hierarchical authorization dependencies by embedding all necessary authorization information directly in the document paths or within the document itself.\n\n**QAPs Support:**\nThe segregation of user-owned message slips into subcollections (`/users/{userId}/messageSlips/{messageSlipId}`) allows for secure `list` operations. Security rules can efficiently filter message slips based on ownership without the risk of exposing data from other users. The use of dedicated collections for roles (`/roles_admin`) enables efficient role-based access control.\n\n**Future Considerations**\nIf collaborative message slips are required, the design could be extended using a membership map within the message slip document to define granular permissions for multiple users. For example, a `members` field containing `{userId: role}` would allow different users to have different levels of access (e.g., editor, viewer) to a message slip.  The key aspect is that this `members` map would be denormalized to avoid `get()` calls in security rules, in accordance with strategy A.\n\n"
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/UserProfile" },
+      "description": "Stores public profiles for users. Document ID is the Firebase Auth UID."
+    },
+    "/messageSlips/{messageSlipId}": {
+      "schema": { "$ref": "#/entities/MessageSlip" },
+      "description": "Collection of all message slips created by all users."
+    }
   }
 }
