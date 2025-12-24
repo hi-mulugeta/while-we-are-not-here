@@ -1,0 +1,143 @@
+/**
+ * Core Philosophy: This ruleset implements a Role-Based Access Control (RBAC) model
+ * with two primary roles: 'user' and 'admin'. The default posture is secure, granting
+ * users strict ownership over their own data while providing administrators the
+ * necessary read and management privileges.
+ *
+ * Data Structure: The data is organized hierarchically and centered around users.
+ * - /users/{userId}: A top-level collection storing public user profiles.
+ * - /users/{userId}/messageSlips/{messageSlipId}: A subcollection containing message
+ *   slips, strictly owned by the parent user.
+ * - /roles_admin/{userId}: A top-level collection that acts as an access control
+ *   list. The existence of a document here grants a user admin privileges.
+ *
+ * Key Security Decisions:
+ * - User Isolation: Users can only read and write to their own /users/{userId} document
+ *   and its subcollections. They are explicitly forbidden from listing or viewing
+ *   other users' profiles.
+ * - Admin Privileges: Admin status is determined by document existence in the
+ *   /roles_admin collection. This is a performant and secure method. Admins have
+ *   read-only access to all user data and full control over the /roles_admin
+ *   collection. They cannot write to user-owned data like messageSlips.
+ * - Client-Side Deletion: Direct deletion of user profile documents by clients is
+ *   disabled to prevent accidental data loss. This should be handled by a trusted
+ *   backend process.
+ *
+ * Denormalization for Authorization:
+ * - Path-Based Security: Ownership of message slips is enforced by their path
+ *   (/users/{userId}/...), which avoids costly `get()` calls to check permissions.
+ * - Existence-Based Roles: The `/roles_admin` collection uses document existence,
+ *   not document data, to grant roles. A single `exists()` call is far more
+ *   efficient than getting a user document and checking a `role` field.
+ *
+ * Structural Segregation:
+ * - User data (/users) is kept separate from role management data (/roles_admin).
+ *   This clear separation simplifies the rules and prevents permission overlaps.
+ */
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper Functions
+    /**
+     * isSignedIn
+     * @description Checks if the user is authenticated.
+     */
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    /**
+     * isOwner
+     * @description Checks if the authenticated user's UID matches the given userId.
+     */
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    /**
+     * isExistingOwner
+     * @description Checks if the document exists and is owned by the user.
+     * Crucial for preventing writes to non-existent documents.
+     */
+    function isExistingOwner(userId) {
+      return isOwner(userId) && resource != null;
+    }
+
+    /**
+     * isAdmin
+     * @description Checks if the user has an admin role by seeing if a
+     * document with their UID exists in the /roles_admin collection.
+     */
+    function isAdmin() {
+      return isSignedIn() && exists(/databases/$(database)/documents/roles_admin/$(request.auth.uid));
+    }
+
+    /**
+     * isSecureUserUpdate
+     * @description Ensures a user updating their profile is not attempting to
+     * escalate their own privileges by setting the role field to 'admin'.
+     */
+    function isSecureUserUpdate() {
+        // Allow the update if the 'role' field is not being changed OR if it's being changed to something other than 'admin'.
+        return request.resource.data.role == resource.data.role || request.resource.data.role != 'admin';
+    }
+
+    /**
+     * @description Manages user profiles. A user can create and update their own
+     *   profile. Admins have read-only access to all user profiles for management.
+     * @path /users/{userId}
+     * @allow (create) An authenticated user creating their own profile document. auth.uid == userId.
+     * @allow (get) An authenticated user reading their own profile. auth.uid == userId.
+     * @allow (get) An admin reading any user's profile.
+     * @deny (list) A regular user trying to list all user profiles.
+     * @deny (update) A user trying to set their own role to 'admin'.
+     * @principle Restricts access to a user's own data tree and prevents privilege escalation.
+     */
+    match /users/{userId} {
+      allow get: if isOwner(userId) || isAdmin();
+      allow list: if isAdmin();
+      allow create: if isOwner(userId) && request.resource.data.id == userId;
+      allow update: if isOwner(userId) && resource != null && request.resource.data.id == resource.data.id && isSecureUserUpdate();
+      allow delete: if false;
+    }
+
+    /**
+     * @description Manages message slips, which are owned by a specific user.
+     *   Only the owning user has full create, read, update, and delete access.
+     *   Admins have read-only access for auditing or support purposes.
+     * @path /users/{userId}/messageSlips/{messageSlipId}
+     * @allow (create) A user creating a message slip for themselves. auth.uid == userId.
+     * @allow (list) A user listing their own message slips. auth.uid == userId.
+     * @deny (update) A user trying to change the creatorId of an existing slip.
+     * @deny (delete) A user trying to delete a message slip belonging to another user.
+     * @principle Enforces document ownership for all operations using path-based security.
+     */
+    match /users/{userId}/messageSlips/{messageSlipId} {
+      allow get: if isOwner(userId) || isAdmin();
+      allow list: if isOwner(userId) || isAdmin();
+      allow create: if isOwner(userId) && request.resource.data.creatorId == userId;
+      allow update: if isExistingOwner(userId) && request.resource.data.creatorId == resource.data.creatorId;
+      allow delete: if isExistingOwner(userId);
+    }
+
+    /**
+     * @description Manages admin role grants. The existence of a document in this
+     *   collection confers admin privileges to the user ID in the path. Only
+     *   existing admins can view or modify this collection.
+     * @path /roles_admin/{userId}
+     * @allow (create) An existing admin adding a new user to the admin list.
+     * @allow (list) An existing admin viewing the list of all admins.
+     * @deny (create) A non-admin user trying to make themselves an admin.
+     * @deny (get) A non-admin user trying to check if another user is an admin.
+     * @principle Uses Database-Based Access Control (DBAC) where document existence grants permissions.
+     */
+    match /roles_admin/{userId} {
+      allow get: if isAdmin();
+      allow list: if isAdmin();
+      allow create: if isAdmin();
+      allow update: if isAdmin() && resource != null;
+      allow delete: if isAdmin() && resource != null;
+    }
+  }
+}
