@@ -39,21 +39,16 @@ service cloud.firestore {
       // ANY authenticated user can create a message slip, as long as they are the creator.
       allow create: if isSignedIn() && request.resource.data.creatorId == request.auth.uid;
       
-      // Users can read their own slips. Admins can read any slip.
+      // Users can read/query slips if they are the creator, Admins can read/query any slip.
+      // This rule enables the client-side query `where('creatorId', '==', user.uid)`.
       allow read: if (isSignedIn() && resource.data.creatorId == request.auth.uid) || isAdmin();
       
       // Only the creator can update or delete their own message slip.
       allow update, delete: if isSignedIn() && resource.data.creatorId == request.auth.uid;
 
-      // LIST rule should not be on a document match. It should be on a collection match.
-      allow list: if false; // Explicitly deny listing individual documents this way.
-    }
-    
-    // Correct security rules for querying the messageSlips collection.
-    match /messageSlips/{document} {
-        // Admins can list all slips.
-        // Regular users can only list slips where their UID matches the creatorId in the query.
-        allow list: if isAdmin() || (isSignedIn() && request.query.where.creatorId == request.auth.uid);
+      // Admins can list all documents. Regular users cannot perform a collection-wide list.
+      // Their queries are secured by the 'read' rule above.
+      allow list: if isAdmin();
     }
   }
 }

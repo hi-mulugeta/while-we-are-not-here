@@ -27,9 +27,11 @@ export default function ArchivePage() {
     const baseQuery = collection(firestore, 'messageSlips');
 
     if (profile?.role === 'admin') {
+      // Admins can see all slips, ordered by most recent
       return query(baseQuery, orderBy('createdAt', 'desc'));
     }
     
+    // Regular users can only see their own slips, ordered by most recent
     return query(baseQuery, where('creatorId', '==', user.uid), orderBy('createdAt', 'desc'));
 
   }, [firestore, user, profile]);
