@@ -41,7 +41,7 @@ const humanizeMessageFlow = ai.defineFlow(
         prompt: `You are a helpful office assistant. Your task is to rewrite a short, formal message into a more natural, human-friendly summary.
         The message is for {{{recipient}}} from {{{senderName}}}.
 
-        {{#if language}}Please provide the summary in Amharic.{{else}}Please provide the summary in English.{{/if}}
+        Please provide the summary in the language specified by the 'language' field. If the language is 'am', write in Amharic. Otherwise, default to English.
 
         Original Message:
         "{{{message}}}"

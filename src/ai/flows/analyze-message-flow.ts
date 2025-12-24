@@ -51,7 +51,7 @@ const analyzeMessageFlow = ai.defineFlow(
       output: { schema: AnalyzeMessageOutputSchema },
       prompt: `You are an expert communication assistant. Your task is to analyze the following message for its tone, clarity, and effectiveness.
         
-        {{#if language}}Provide the analysis in Amharic.{{else}}Provide the analysis in English.{{/if}}
+        Provide the analysis in the language specified by the 'language' field. If the language is 'am', provide the analysis in Amharic. Otherwise, default to English.
 
         Message to Analyze:
         "{{{message}}}"
